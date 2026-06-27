@@ -39,6 +39,12 @@ mkdir -p "${APP_BUNDLE}/Contents/Resources"
 cp "${EXECUTABLE_SOURCE}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
+# Copy app icon assets
+ASSETS_SOURCE="${PROJECT_ROOT}/Sources/${APP_NAME}/Resources/Assets.xcassets"
+if [[ -d "${ASSETS_SOURCE}" ]]; then
+    cp -R "${ASSETS_SOURCE}" "${APP_BUNDLE}/Contents/Resources/"
+fi
+
 # Generate Info.plist
 cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -61,6 +67,8 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 </dict>
