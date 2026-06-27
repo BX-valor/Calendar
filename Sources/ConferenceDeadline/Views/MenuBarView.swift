@@ -69,7 +69,7 @@ struct MenuBarView: View {
 
     private var header: some View {
         HStack {
-            Text("CCF-A 会议 Deadline")
+            Text("AI 会议 Deadline")
                 .font(.system(size: 13, weight: .semibold))
             Spacer()
         }
