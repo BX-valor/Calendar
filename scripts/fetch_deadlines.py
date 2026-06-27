@@ -60,6 +60,7 @@ CCF_RATINGS = {
     "EMNLP": "CCF-A",
     "ACM MM": "CCF-A",
     "AAAI": "CCF-A",
+    "ACM MM": "CCF-A",
     "KDD": "CCF-A",
     "WWW": "CCF-A",
     "SIGIR": "CCF-A",
