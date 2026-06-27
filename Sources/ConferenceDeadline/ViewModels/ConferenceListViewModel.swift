@@ -5,8 +5,16 @@ import Combine
 final class ConferenceListViewModel: ObservableObject {
     @Published var conferences: [Conference] = []
     @Published var errorMessage: String?
+    @Published var filter: ConferenceFilter = ConferenceFilter()
 
     private var timer: AnyCancellable?
+
+    /// 经过筛选并排序后的会议列表，视图应使用此属性渲染。
+    var displayedConferences: [Conference] {
+        conferences
+            .filter { filter.includes($0) }
+            .sorted { $0.timeUntilNextDeadline() < $1.timeUntilNextDeadline() }
+    }
 
     init() {
         load()
@@ -63,6 +71,26 @@ final class ConferenceListViewModel: ObservableObject {
     func deleteConference(_ conference: Conference) {
         conferences.removeAll { $0.id == conference.id }
         save()
+    }
+
+    func toggleTag(_ tag: String) {
+        if filter.selectedTags.contains(tag) {
+            filter.selectedTags.remove(tag)
+        } else {
+            filter.selectedTags.insert(tag)
+        }
+    }
+
+    func toggleCategory(_ category: String) {
+        if filter.selectedCategories.contains(category) {
+            filter.selectedCategories.remove(category)
+        } else {
+            filter.selectedCategories.insert(category)
+        }
+    }
+
+    func clearFilter() {
+        filter = ConferenceFilter()
     }
 
     private func sortConferences() {
