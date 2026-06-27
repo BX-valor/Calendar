@@ -39,10 +39,20 @@ mkdir -p "${APP_BUNDLE}/Contents/Resources"
 cp "${EXECUTABLE_SOURCE}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
-# Copy app icon assets
-ASSETS_SOURCE="${PROJECT_ROOT}/Sources/${APP_NAME}/Resources/Assets.xcassets"
+# Generate app icon .icns from Assets.xcassets
+ICONSET_DIR="${BUILD_DIR}/AppIcon.iconset"
+ICNS_PATH="${BUILD_DIR}/AppIcon.icns"
+ASSETS_SOURCE="${PROJECT_ROOT}/Sources/${APP_NAME}/Resources/Assets.xcassets/AppIcon.appiconset"
+
 if [[ -d "${ASSETS_SOURCE}" ]]; then
-    cp -R "${ASSETS_SOURCE}" "${APP_BUNDLE}/Contents/Resources/"
+    rm -rf "${ICONSET_DIR}"
+    mkdir -p "${ICONSET_DIR}"
+    for size in 16 32 128 256 512; do
+        cp "${ASSETS_SOURCE}/icon_${size}x${size}.png" "${ICONSET_DIR}/"
+        cp "${ASSETS_SOURCE}/icon_${size}x${size}@2x.png" "${ICONSET_DIR}/"
+    done
+    iconutil -c icns "${ICONSET_DIR}" -o "${ICNS_PATH}"
+    cp "${ICNS_PATH}" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
 fi
 
 # Generate Info.plist
@@ -67,7 +77,7 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
-    <key>CFBundleIconName</key>
+    <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
