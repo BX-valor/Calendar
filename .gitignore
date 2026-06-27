@@ -9,3 +9,6 @@ DerivedData/
 
 # CCF reference data is local-only
 CCF_DATA/
+
+# Build outputs
+build/
