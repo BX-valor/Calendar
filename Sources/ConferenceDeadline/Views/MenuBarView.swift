@@ -17,7 +17,7 @@ struct MenuBarView: View {
     }
 
     private let ccfTags = ["CCF-A", "CCF-B", "CCF-C"]
-    private let categories = ["CV", "NLP", "ML", "AI", "DM", "IR", "MM"]
+    private let categories = ["CV", "NLP", "ML", "AI", "Robotics", "DM", "IR", "MM"]
 
     private var conferenceListView: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -142,22 +142,21 @@ struct MenuBarView: View {
         selectAll: @escaping () -> Void,
         toggle: @escaping (String) -> Void
     ) -> some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .top, spacing: 4) {
             Text(title)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .frame(width: 32, alignment: .leading)
+                .padding(.top, 3)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    filterChip(title: allTitle, isSelected: isAllSelected()) {
-                        selectAll()
-                    }
+            FlowLayout(spacing: 6) {
+                filterChip(title: allTitle, isSelected: isAllSelected()) {
+                    selectAll()
+                }
 
-                    ForEach(items, id: \.self) { item in
-                        filterChip(title: item, isSelected: isSelected(item)) {
-                            toggle(item)
-                        }
+                ForEach(items, id: \.self) { item in
+                    filterChip(title: item, isSelected: isSelected(item)) {
+                        toggle(item)
                     }
                 }
             }
