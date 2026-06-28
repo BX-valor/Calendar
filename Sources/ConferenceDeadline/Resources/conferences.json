@@ -1,17 +1,521 @@
 [
   {
-    "id": "neurips2026",
-    "name": "NeurIPS",
+    "id": "aaai2027",
+    "name": "AAAI",
+    "year": 2027,
+    "category": "AI",
+    "abstractDeadline": "2026-07-21T23:59:59-12:00",
+    "paperDeadline": "2026-07-28T23:59:59-12:00",
+    "rebuttalDeadline": "2026-10-25T23:59:59-12:00",
+    "finalDecisionDate": "2026-11-30T23:59:59-12:00",
+    "conferenceDate": "2027-02-16T00:00:00-05:00",
+    "location": "Montréal, Canada",
+    "venue": null,
+    "website": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-A"
+    ]
+  },
+  {
+    "id": "aamas2025",
+    "name": "AAMAS",
+    "year": 2025,
+    "category": "AI",
+    "abstractDeadline": "2024-10-09T23:59:59-12:00",
+    "paperDeadline": "2024-10-16T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2025-05-19T00:00:00+00:00",
+    "location": "Detroit, Michigan, USA",
+    "venue": null,
+    "website": "https://aamas2025.org/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "ecai2024",
+    "name": "ECAI",
+    "year": 2024,
+    "category": "AI",
+    "abstractDeadline": "2024-04-19T23:59:59-12:00",
+    "paperDeadline": "2024-04-25T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-10-19T00:00:00+00:00",
+    "location": "Santiago de Compostela, Spain",
+    "venue": null,
+    "website": "https://www.ecai2024.eu/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "icaps2024",
+    "name": "ICAPS",
+    "year": 2024,
+    "category": "AI",
+    "abstractDeadline": "2023-12-07T23:59:59-12:00",
+    "paperDeadline": "2023-12-13T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-06-01T00:00:00+00:00",
+    "location": "Banff, Canada",
+    "venue": null,
+    "website": "https://icaps24.icaps-conference.org/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "ijcai2026",
+    "name": "IJCAI",
+    "year": 2026,
+    "category": "AI",
+    "abstractDeadline": "2026-01-12T23:59:59-12:00",
+    "paperDeadline": "2026-01-19T23:59:59-12:00",
+    "rebuttalDeadline": "2026-04-10T23:59:59-12:00",
+    "finalDecisionDate": "2026-04-29T23:59:59-12:00",
+    "conferenceDate": "2026-08-18T00:00:00+02:00",
+    "location": "Bremen, Germany",
+    "venue": null,
+    "website": "https://2026.ijcai.org/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "kr2024",
+    "name": "KR",
+    "year": 2024,
+    "category": "AI",
+    "abstractDeadline": "2024-04-24T23:59:59-12:00",
+    "paperDeadline": "2024-05-01T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-11-02T00:00:00+00:00",
+    "location": "Hanoi, Vietnam",
+    "venue": null,
+    "website": "https://kr.org/KR2024/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "accv2020",
+    "name": "ACCV",
+    "year": 2020,
+    "category": "CV",
+    "abstractDeadline": "2020-07-08T23:59:00+00:00",
+    "paperDeadline": "2020-07-08T23:59:00+00:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2020-11-30T00:00:00+00:00",
+    "location": null,
+    "venue": null,
+    "website": "http://accv2020.kyoto/",
+    "timezone": "UTC",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "bmvc2026",
+    "name": "BMVC",
+    "year": 2026,
+    "category": "CV",
+    "abstractDeadline": "2026-05-22T23:59:59-12:00",
+    "paperDeadline": "2026-05-29T23:59:59-12:00",
+    "rebuttalDeadline": "2026-07-10T23:59:59-12:00",
+    "finalDecisionDate": "2026-08-07T23:59:59-12:00",
+    "conferenceDate": "2026-11-23T00:00:00+00:00",
+    "location": "Lancaster, UK",
+    "venue": null,
+    "website": "https://bmvc2026.bmva.org/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "cvpr2026",
+    "name": "CVPR",
+    "year": 2026,
+    "category": "CV",
+    "abstractDeadline": "2025-11-07T23:59:59-12:00",
+    "paperDeadline": "2025-11-13T23:59:59-12:00",
+    "rebuttalDeadline": "2026-01-29T23:59:59-12:00",
+    "finalDecisionDate": "2026-02-20T23:59:59-12:00",
+    "conferenceDate": "2026-06-03T00:00:00-06:00",
+    "location": "Denver, Colorado, USA",
+    "venue": "Colorado Convention Center",
+    "website": "https://cvpr.thecvf.com/Conferences/2026/CallForPapers",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-A"
+    ]
+  },
+  {
+    "id": "eccv2026",
+    "name": "ECCV",
+    "year": 2026,
+    "category": "CV",
+    "abstractDeadline": "2026-02-26T23:00:00+01:00",
+    "paperDeadline": "2026-03-05T23:00:00+01:00",
+    "rebuttalDeadline": "2026-05-11T23:00:00+02:00",
+    "finalDecisionDate": "2026-06-17T23:59:59+02:00",
+    "conferenceDate": "2026-09-08T00:00:00+02:00",
+    "location": "Malmö, Sweden",
+    "venue": "Malmö Arena & Malmömässan",
+    "website": "https://eccv.ecva.net/",
+    "timezone": "CET/CEST",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "fg2021",
+    "name": "FG",
+    "year": 2021,
+    "category": "CV",
+    "abstractDeadline": "2021-04-15T23:59:00+00:00",
+    "paperDeadline": "2021-04-15T23:59:00+00:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2021-12-15T00:00:00+00:00",
+    "location": "Jodhpur, India",
+    "venue": null,
+    "website": "http://iab-rubric.org/fg2021/",
+    "timezone": "America/Los_Angeles",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "iccv2027",
+    "name": "ICCV",
+    "year": 2027,
+    "category": "CV",
+    "abstractDeadline": "2027-03-01T23:59:59-12:00",
+    "paperDeadline": "2027-03-05T23:59:59-12:00",
+    "rebuttalDeadline": "2027-05-15T23:59:59-12:00",
+    "finalDecisionDate": "2027-07-05T23:59:59-12:00",
+    "conferenceDate": "2027-10-02T00:00:00+08:00",
+    "location": "Hong Kong",
+    "venue": null,
+    "website": "https://www.thecvf.com/",
+    "timezone": "AoE (estimated)",
+    "tags": [
+      "CCF-A"
+    ]
+  },
+  {
+    "id": "icpr2020",
+    "name": "ICPR",
+    "year": 2020,
+    "category": "CV",
+    "abstractDeadline": "2020-07-15T23:59:00+01:00",
+    "paperDeadline": "2020-07-15T23:59:00+01:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2021-01-10T00:00:00+00:00",
+    "location": "Milan, Italy",
+    "venue": null,
+    "website": "https://www.micc.unifi.it/icpr2020/",
+    "timezone": "UTC+1",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "ecmlpkdd2024",
+    "name": "ECML-PKDD",
+    "year": 2024,
+    "category": "DM",
+    "abstractDeadline": "2024-07-22T23:59:59-12:00",
+    "paperDeadline": "2024-07-22T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-09-09T00:00:00+00:00",
+    "location": "Vilnius (Lithuania)",
+    "venue": null,
+    "website": "https://2024.ecmlpkdd.org/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "icdm2023",
+    "name": "ICDM",
+    "year": 2023,
+    "category": "DM",
+    "abstractDeadline": "2023-07-01T23:59:00+00:00",
+    "paperDeadline": "2023-07-01T23:59:00+00:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2023-12-01T00:00:00+00:00",
+    "location": "Shanghai, China",
+    "venue": null,
+    "website": "https://www.cloud-conf.net/icdm2023/",
+    "timezone": "Asia/Shanghai",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "kdd2027",
+    "name": "KDD",
+    "year": 2027,
+    "category": "DM",
+    "abstractDeadline": "2026-07-19T23:59:59-12:00",
+    "paperDeadline": "2026-07-26T23:59:59-12:00",
+    "rebuttalDeadline": "2026-10-13T23:59:59-12:00",
+    "finalDecisionDate": "2026-11-14T23:59:59-12:00",
+    "conferenceDate": "2027-08-01T00:00:00-07:00",
+    "location": "San Jose, California, USA",
+    "venue": null,
+    "website": "https://kdd2027.kdd.org/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-A"
+    ]
+  },
+  {
+    "id": "pakdd2023",
+    "name": "PAKDD",
+    "year": 2023,
+    "category": "DM",
+    "abstractDeadline": "2022-12-07T23:59:59-08:00",
+    "paperDeadline": "2022-12-07T23:59:59-08:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2023-05-25T00:00:00+00:00",
+    "location": "Osaka, Japan",
+    "venue": null,
+    "website": "https://pakdd2023.org",
+    "timezone": "UTC-8",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "sdm2021",
+    "name": "SDM",
+    "year": 2021,
+    "category": "DM",
+    "abstractDeadline": "2020-10-12T23:59:00-05:00",
+    "paperDeadline": "2020-10-12T23:59:00-05:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2021-04-29T00:00:00+00:00",
+    "location": null,
+    "venue": null,
+    "website": "https://www.siam.org/conferences/cm/conference/sdm21",
+    "timezone": "UTC-5",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "cikm2026",
+    "name": "CIKM",
+    "year": 2026,
+    "category": "IR",
+    "abstractDeadline": "2026-05-16T23:59:59-12:00",
+    "paperDeadline": "2026-05-23T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": "2026-08-07T23:59:59-12:00",
+    "conferenceDate": "2026-11-07T00:00:00+01:00",
+    "location": "Rome, Italy",
+    "venue": null,
+    "website": "https://cikm2026.diag.uniroma1.it/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "ecir2025",
+    "name": "ECIR",
+    "year": 2025,
+    "category": "IR",
+    "abstractDeadline": "2024-10-02T23:59:59-12:00",
+    "paperDeadline": "2024-10-09T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2025-04-06T00:00:00+00:00",
+    "location": "Lucca, Tuscany, Italy",
+    "venue": null,
+    "website": "https://ecir2025.eu/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "iswc2023",
+    "name": "ISWC",
+    "year": 2023,
+    "category": "IR",
+    "abstractDeadline": "2023-05-02T23:59:59-12:00",
+    "paperDeadline": "2023-05-09T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2023-11-06T00:00:00+00:00",
+    "location": "Athens, Greece",
+    "venue": null,
+    "website": "https://iswc2023.semanticweb.org/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "recsys2023",
+    "name": "RecSys",
+    "year": 2023,
+    "category": "IR",
+    "abstractDeadline": "2023-04-14T23:59:59-12:00",
+    "paperDeadline": "2023-04-21T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": null,
+    "location": "Singapore",
+    "venue": null,
+    "website": "https://recsys.acm.org/recsys23/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "sigir2026",
+    "name": "SIGIR",
+    "year": 2026,
+    "category": "IR",
+    "abstractDeadline": "2026-01-15T23:59:59-12:00",
+    "paperDeadline": "2026-01-22T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": "2026-04-02T23:59:59-12:00",
+    "conferenceDate": "2026-07-21T00:00:00+10:00",
+    "location": "Melbourne, Australia",
+    "venue": null,
+    "website": "https://sigir2026.org/en-AU/pages/submissions/full-papers-track",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-A"
+    ]
+  },
+  {
+    "id": "wsdm2025",
+    "name": "WSDM",
+    "year": 2025,
+    "category": "IR",
+    "abstractDeadline": "2024-08-14T23:59:00-12:00",
+    "paperDeadline": "2024-08-14T23:59:00-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2025-03-10T00:00:00+00:00",
+    "location": "Hannover, Germany",
+    "venue": null,
+    "website": "https://www.wsdm-conference.org/2025/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "acml2023",
+    "name": "ACML",
+    "year": 2023,
+    "category": "ML",
+    "abstractDeadline": "2023-06-23T23:59:00-12:00",
+    "paperDeadline": "2023-06-23T23:59:00-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2023-11-11T00:00:00+00:00",
+    "location": "Istanbul, Türkiye",
+    "venue": null,
+    "website": "https://www.acml-conf.org/2023",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "aistats2025",
+    "name": "AISTATS",
+    "year": 2025,
+    "category": "ML",
+    "abstractDeadline": "2024-10-03T23:59:59-12:00",
+    "paperDeadline": "2024-10-10T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2025-05-03T00:00:00+00:00",
+    "location": "Phuket, Thailand",
+    "venue": null,
+    "website": "https://aistats.org/aistats2025/index.html",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "alt2020",
+    "name": "ALT",
+    "year": 2020,
+    "category": "ML",
+    "abstractDeadline": "2019-09-20T16:59:59+00:00",
+    "paperDeadline": "2019-09-20T16:59:59+00:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2020-02-08T00:00:00+00:00",
+    "location": "San Diego, CA, United States",
+    "venue": null,
+    "website": "http://alt2020.algorithmiclearningtheory.org/",
+    "timezone": "America/New_York",
+    "tags": [
+      "CCF-C"
+    ]
+  },
+  {
+    "id": "colt2020",
+    "name": "COLT",
+    "year": 2020,
+    "category": "ML",
+    "abstractDeadline": "2020-01-31T16:00:00+00:00",
+    "paperDeadline": "2020-01-31T16:00:00+00:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2020-06-08T00:00:00+00:00",
+    "location": "Graz, Austria",
+    "venue": null,
+    "website": "http://www.learningtheory.org/colt2020/",
+    "timezone": "America/Los_Angeles",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "iclr2026",
+    "name": "ICLR",
     "year": 2026,
     "category": "ML",
-    "abstractDeadline": "2026-05-04T23:59:59-12:00",
-    "paperDeadline": "2026-05-06T23:59:59-12:00",
-    "rebuttalDeadline": "2026-08-03T23:59:59-12:00",
-    "finalDecisionDate": "2026-09-24T23:59:59-12:00",
-    "conferenceDate": "2026-12-06T00:00:00+11:00",
-    "location": "Sydney, Australia",
-    "venue": null,
-    "website": "https://neurips.cc/Conferences/2026/CallForPapers",
+    "abstractDeadline": "2025-09-19T23:59:59-12:00",
+    "paperDeadline": "2025-09-24T23:59:59-12:00",
+    "rebuttalDeadline": "2025-12-03T21:00:00+00:00",
+    "finalDecisionDate": "2026-01-25T23:59:59-12:00",
+    "conferenceDate": "2026-04-23T00:00:00-03:00",
+    "location": "Rio de Janeiro, Brazil",
+    "venue": "Riocentro Convention and Event Center",
+    "website": "https://iclr.cc/Conferences/2026",
     "timezone": "AoE",
     "tags": [
       "CCF-A"
@@ -36,75 +540,57 @@
     ]
   },
   {
-    "id": "iclr2026",
-    "name": "ICLR",
+    "id": "neurips2026",
+    "name": "NeurIPS",
     "year": 2026,
     "category": "ML",
-    "abstractDeadline": "2025-09-19T23:59:59-12:00",
-    "paperDeadline": "2025-09-24T23:59:59-12:00",
-    "rebuttalDeadline": "2025-12-03T21:00:00+00:00",
-    "finalDecisionDate": "2026-01-25T23:59:59-12:00",
-    "conferenceDate": "2026-04-23T00:00:00-03:00",
-    "location": "Rio de Janeiro, Brazil",
-    "venue": "Riocentro Convention and Event Center",
-    "website": "https://iclr.cc/Conferences/2026",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-A"
-    ]
-  },
-  {
-    "id": "cvpr2026",
-    "name": "CVPR",
-    "year": 2026,
-    "category": "CV",
-    "abstractDeadline": "2025-11-07T23:59:59-12:00",
-    "paperDeadline": "2025-11-13T23:59:59-12:00",
-    "rebuttalDeadline": "2026-01-29T23:59:59-12:00",
-    "finalDecisionDate": "2026-02-20T23:59:59-12:00",
-    "conferenceDate": "2026-06-03T00:00:00-06:00",
-    "location": "Denver, Colorado, USA",
-    "venue": "Colorado Convention Center",
-    "website": "https://cvpr.thecvf.com/Conferences/2026/CallForPapers",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-A"
-    ]
-  },
-  {
-    "id": "iccv2027",
-    "name": "ICCV",
-    "year": 2027,
-    "category": "CV",
-    "abstractDeadline": "2027-03-01T23:59:59-12:00",
-    "paperDeadline": "2027-03-05T23:59:59-12:00",
-    "rebuttalDeadline": "2027-05-15T23:59:59-12:00",
-    "finalDecisionDate": "2027-07-05T23:59:59-12:00",
-    "conferenceDate": "2027-10-02T00:00:00+08:00",
-    "location": "Hong Kong",
+    "abstractDeadline": "2026-05-04T23:59:59-12:00",
+    "paperDeadline": "2026-05-06T23:59:59-12:00",
+    "rebuttalDeadline": "2026-08-03T23:59:59-12:00",
+    "finalDecisionDate": "2026-09-24T23:59:59-12:00",
+    "conferenceDate": "2026-12-06T00:00:00+11:00",
+    "location": "Sydney, Australia",
     "venue": null,
-    "website": "https://www.thecvf.com/",
-    "timezone": "AoE (estimated)",
+    "website": "https://neurips.cc/Conferences/2026/CallForPapers",
+    "timezone": "AoE",
     "tags": [
       "CCF-A"
     ]
   },
   {
-    "id": "eccv2026",
-    "name": "ECCV",
-    "year": 2026,
-    "category": "CV",
-    "abstractDeadline": "2026-02-26T23:00:00+01:00",
-    "paperDeadline": "2026-03-05T23:00:00+01:00",
-    "rebuttalDeadline": "2026-05-11T23:00:00+02:00",
-    "finalDecisionDate": "2026-06-17T23:59:59+02:00",
-    "conferenceDate": "2026-09-08T00:00:00+02:00",
-    "location": "Malmö, Sweden",
-    "venue": "Malmö Arena & Malmömässan",
-    "website": "https://eccv.ecva.net/",
-    "timezone": "CET/CEST",
+    "id": "uai2024",
+    "name": "UAI",
+    "year": 2024,
+    "category": "ML",
+    "abstractDeadline": "2024-02-09T23:59:59-12:00",
+    "paperDeadline": "2024-02-09T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-07-15T00:00:00+00:00",
+    "location": "Barcelona, Spain",
+    "venue": null,
+    "website": "https://www.auai.org/uai2024/",
+    "timezone": "UTC-12",
     "tags": [
       "CCF-B"
+    ]
+  },
+  {
+    "id": "acmmm2026",
+    "name": "ACM MM",
+    "year": 2026,
+    "category": "MM",
+    "abstractDeadline": "2026-03-25T23:59:59-12:00",
+    "paperDeadline": "2026-04-01T23:59:59-12:00",
+    "rebuttalDeadline": "2026-06-04T23:59:59-12:00",
+    "finalDecisionDate": "2026-07-09T23:59:59-12:00",
+    "conferenceDate": "2026-11-10T00:00:00-03:00",
+    "location": "Rio de Janeiro, Brazil",
+    "venue": null,
+    "website": "https://2026.acmmm.org/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-A"
     ]
   },
   {
@@ -123,6 +609,42 @@
     "timezone": "AoE",
     "tags": [
       "CCF-A"
+    ]
+  },
+  {
+    "id": "coling2027",
+    "name": "COLING",
+    "year": 2027,
+    "category": "NLP",
+    "abstractDeadline": "2026-10-12T23:59:59-12:00",
+    "paperDeadline": "2026-10-12T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2027-05-09T00:00:00+08:00",
+    "location": "Macau, China",
+    "venue": null,
+    "website": "https://2027.coling-iccl.org/",
+    "timezone": "AoE",
+    "tags": [
+      "CCF-B"
+    ]
+  },
+  {
+    "id": "conll2023",
+    "name": "CoNLL",
+    "year": 2023,
+    "category": "NLP",
+    "abstractDeadline": "2023-06-30T23:59:59-12:00",
+    "paperDeadline": "2023-06-30T23:59:59-12:00",
+    "rebuttalDeadline": null,
+    "finalDecisionDate": null,
+    "conferenceDate": "2023-12-06T00:00:00+00:00",
+    "location": "Singapore",
+    "venue": null,
+    "website": "https://conll.org/",
+    "timezone": "UTC-12",
+    "tags": [
+      "CCF-C"
     ]
   },
   {
@@ -162,181 +684,37 @@
     ]
   },
   {
-    "id": "acmmm2026",
-    "name": "ACM MM",
-    "year": 2026,
-    "category": "MM",
-    "abstractDeadline": "2026-03-25T23:59:59-12:00",
-    "paperDeadline": "2026-04-01T23:59:59-12:00",
-    "rebuttalDeadline": "2026-06-04T23:59:59-12:00",
-    "finalDecisionDate": "2026-07-09T23:59:59-12:00",
-    "conferenceDate": "2026-11-10T00:00:00-03:00",
-    "location": "Rio de Janeiro, Brazil",
-    "venue": null,
-    "website": "https://2026.acmmm.org/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-A"
-    ]
-  },
-  {
-    "id": "aaai2027",
-    "name": "AAAI",
-    "year": 2027,
-    "category": "AI",
-    "abstractDeadline": "2026-07-21T23:59:59-12:00",
-    "paperDeadline": "2026-07-28T23:59:59-12:00",
-    "rebuttalDeadline": "2026-10-25T23:59:59-12:00",
-    "finalDecisionDate": "2026-11-30T23:59:59-12:00",
-    "conferenceDate": "2027-02-16T00:00:00-05:00",
-    "location": "Montréal, Canada",
-    "venue": null,
-    "website": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-A"
-    ]
-  },
-  {
-    "id": "ijcai2026",
-    "name": "IJCAI",
-    "year": 2026,
-    "category": "AI",
-    "abstractDeadline": "2026-01-12T23:59:59-12:00",
-    "paperDeadline": "2026-01-19T23:59:59-12:00",
-    "rebuttalDeadline": "2026-04-10T23:59:59-12:00",
-    "finalDecisionDate": "2026-04-29T23:59:59-12:00",
-    "conferenceDate": "2026-08-18T00:00:00+02:00",
-    "location": "Bremen, Germany",
-    "venue": null,
-    "website": "https://2026.ijcai.org/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-B"
-    ]
-  },
-  {
-    "id": "kdd2027",
-    "name": "KDD",
-    "year": 2027,
-    "category": "DM",
-    "abstractDeadline": "2026-07-19T23:59:59-12:00",
-    "paperDeadline": "2026-07-26T23:59:59-12:00",
-    "rebuttalDeadline": "2026-10-13T23:59:59-12:00",
-    "finalDecisionDate": "2026-11-14T23:59:59-12:00",
-    "conferenceDate": "2027-08-01T00:00:00-07:00",
-    "location": "San Jose, California, USA",
-    "venue": null,
-    "website": "https://kdd2027.kdd.org/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-C"
-    ]
-  },
-  {
-    "id": "www2026",
-    "name": "WWW",
-    "year": 2026,
-    "category": "DM",
-    "abstractDeadline": "2025-09-30T23:59:59-12:00",
-    "paperDeadline": "2025-10-07T23:59:59-12:00",
-    "rebuttalDeadline": "2025-12-01T23:59:59-12:00",
-    "finalDecisionDate": "2026-01-13T23:59:59-12:00",
-    "conferenceDate": "2026-06-29T00:00:00+04:00",
-    "location": "Dubai, United Arab Emirates",
-    "venue": null,
-    "website": "https://www2026.thewebconf.org/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-C"
-    ]
-  },
-  {
-    "id": "sigir2026",
-    "name": "SIGIR",
-    "year": 2026,
-    "category": "IR",
-    "abstractDeadline": "2026-01-15T23:59:59-12:00",
-    "paperDeadline": "2026-01-22T23:59:59-12:00",
-    "rebuttalDeadline": null,
-    "finalDecisionDate": "2026-04-02T23:59:59-12:00",
-    "conferenceDate": "2026-07-21T00:00:00+10:00",
-    "location": "Melbourne, Australia",
-    "venue": null,
-    "website": "https://sigir2026.org/en-AU/pages/submissions/full-papers-track",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-C"
-    ]
-  },
-  {
-    "id": "wacv2027",
-    "name": "WACV",
-    "year": 2027,
-    "category": "CV",
-    "abstractDeadline": "2026-06-19T23:59:59-12:00",
-    "paperDeadline": "2026-08-28T23:59:59-12:00",
-    "rebuttalDeadline": null,
-    "finalDecisionDate": "2026-10-09T23:59:59-12:00",
-    "conferenceDate": "2027-01-06T00:00:00-05:00",
-    "location": "Buena Vista, FL, USA",
-    "venue": "Disney Springs",
-    "website": "https://wacv.thecvf.com/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-C"
-    ]
-  },
-  {
-    "id": "bmvc2026",
-    "name": "BMVC",
-    "year": 2026,
-    "category": "CV",
-    "abstractDeadline": "2026-05-22T23:59:59-12:00",
-    "paperDeadline": "2026-05-29T23:59:59-12:00",
-    "rebuttalDeadline": "2026-07-10T23:59:59-12:00",
-    "finalDecisionDate": "2026-08-07T23:59:59-12:00",
-    "conferenceDate": "2026-11-23T00:00:00+00:00",
-    "location": "Lancaster, UK",
-    "venue": null,
-    "website": "https://bmvc2026.bmva.org/",
-    "timezone": "AoE",
-    "tags": [
-      "CCF-C"
-    ]
-  },
-  {
-    "id": "coling2027",
-    "name": "COLING",
-    "year": 2027,
-    "category": "NLP",
-    "abstractDeadline": "2026-10-12T23:59:59-12:00",
-    "paperDeadline": "2026-10-12T23:59:59-12:00",
+    "id": "icra2025",
+    "name": "ICRA",
+    "year": 2025,
+    "category": "Robotics",
+    "abstractDeadline": "2024-09-15T23:59:59+00:00",
+    "paperDeadline": "2024-09-15T23:59:59+00:00",
     "rebuttalDeadline": null,
     "finalDecisionDate": null,
-    "conferenceDate": "2027-05-09T00:00:00+08:00",
-    "location": "Macau, China",
+    "conferenceDate": "2025-05-19T00:00:00+00:00",
+    "location": "Atlanta, USA",
     "venue": null,
-    "website": "https://2027.coling-iccl.org/",
-    "timezone": "AoE",
+    "website": "https://2025.ieee-icra.org",
+    "timezone": "America/Los_Angeles",
     "tags": [
       "CCF-B"
     ]
   },
   {
-    "id": "cikm2026",
-    "name": "CIKM",
-    "year": 2026,
-    "category": "IR",
-    "abstractDeadline": "2026-05-16T23:59:59-12:00",
-    "paperDeadline": "2026-05-23T23:59:59-12:00",
+    "id": "iros2024",
+    "name": "IROS",
+    "year": 2024,
+    "category": "Robotics",
+    "abstractDeadline": "2024-03-01T23:59:59+00:00",
+    "paperDeadline": "2024-03-01T23:59:59+00:00",
     "rebuttalDeadline": null,
-    "finalDecisionDate": "2026-08-07T23:59:59-12:00",
-    "conferenceDate": "2026-11-07T00:00:00+01:00",
-    "location": "Rome, Italy",
+    "finalDecisionDate": null,
+    "conferenceDate": "2024-10-14T00:00:00+00:00",
+    "location": "Abu Dhabi, UAE",
     "venue": null,
-    "website": "https://cikm2026.diag.uniroma1.it/",
-    "timezone": "AoE",
+    "website": "https://iros2024-abudhabi.org/",
+    "timezone": "America/Los_Angeles",
     "tags": [
       "CCF-C"
     ]

@@ -17,7 +17,7 @@ struct MenuBarView: View {
     }
 
     private let ccfTags = ["CCF-A", "CCF-B", "CCF-C"]
-    private let categories = ["CV", "NLP", "ML", "AI", "Robotics", "DM", "IR", "MM"]
+    private let categories = ["AI", "ML", "CV", "NLP", "Robotics", "DM", "IR", "DB", "MM"]
 
     private var conferenceListView: some View {
         VStack(alignment: .leading, spacing: 0) {

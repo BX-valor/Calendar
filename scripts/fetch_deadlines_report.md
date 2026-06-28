@@ -1,47 +1,92 @@
 # Conference Deadline Fetch Report
-Source: https://raw.githubusercontent.com/paperswithcode/ai-deadlines/gh-pages/_data/conferences.yml
-Generated: 2026-06-27T12:26:14.297746+00:00
 
-## Fetched conferences
-- **AAAI 2025**: abstract=2024-08-07T23:59:59-12:00, paper=2024-08-15T23:59:59-12:00
-- **ACL 2024**: abstract=2024-02-15T23:59:00-12:00, paper=2024-02-15T23:59:00-12:00
-- **ACM MM 2024**: abstract=2024-04-12T23:59:59-12:00, paper=2024-04-08T23:59:59-12:00
-- **BMVC 2024**: abstract=2024-04-26T23:59:59+00:00, paper=2024-05-10T23:59:59+00:00
-- **CIKM 2024**: abstract=2024-05-13T23:59:59-12:00, paper=2024-05-20T23:59:59-12:00
-- **COLING 2025**: abstract=2024-09-16T23:59:59-12:00, paper=2024-09-16T23:59:59-12:00
-- **CVPR 2025**: abstract=2024-11-08T06:59:59+00:00, paper=2024-11-15T06:59:59+00:00
-- **ECCV 2024**: abstract=2024-02-29T12:59:00-08:00, paper=2024-03-07T12:59:00-08:00
-- **EMNLP 2024**: abstract=2024-06-15T23:59:00-12:00, paper=2024-06-15T23:59:00-12:00
-- **ICCV 2023**: abstract=2023-03-08T23:59:00+00:00, paper=2023-03-08T23:59:00+00:00
-- **ICLR 2025**: abstract=2024-09-27T23:59:59-12:00, paper=2024-10-01T23:59:59-12:00
-- **ICML 2024**: abstract=2024-02-01T23:59:59-12:00, paper=2024-02-01T23:59:59-12:00
-- **IJCAI 2024**: abstract=2024-01-10T23:59:59-12:00, paper=2024-01-17T23:59:59-12:00
-- **KDD 2024**: abstract=2024-02-01T23:59:59-12:00, paper=2024-02-08T23:59:59-12:00
-- **NAACL 2025**: abstract=2024-10-15T23:59:59-12:00, paper=2024-10-15T23:59:59-12:00
-- **NeurIPS 2024**: abstract=2024-05-15T19:59:59+00:00, paper=2024-05-22T19:59:59+00:00
-- **SIGIR 2024**: abstract=2024-01-18T23:59:00-12:00, paper=2024-01-25T23:59:00-12:00
-- **WACV 2025**: abstract=2024-09-09T23:59:59-07:00, paper=2024-09-09T23:59:59-07:00
-- **WWW 2023**: abstract=2022-10-06T23:59:59-12:00, paper=2022-10-13T23:59:59-12:00
+Generated: 2026-06-28T05:32:40.934434+00:00
 
-## Manual verification required
-ai-deadlines does not provide rebuttal or final decision dates. Please visit each conference's official website and update the JSON:
+## Summary
 
-- [AAAI 2025](https://aaai.org/conference/aaai/aaai-25/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ACL 2024](https://2024.aclweb.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ACM MM 2024](https://2024.acmmm.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [BMVC 2024](https://bmvc2024.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [CIKM 2024](https://cikm2024.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [COLING 2025](https://coling2025.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [CVPR 2025](https://cvpr.thecvf.com/Conferences/2025): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ECCV 2024](https://eccv2024.ecva.net/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [EMNLP 2024](https://2024.emnlp.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ICCV 2023](http://iccv2023.thecvf.com/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ICLR 2025](https://iclr.cc/Conferences/2025/CallForPapers): verify `rebuttalDeadline` and `finalDecisionDate`
-- [ICML 2024](https://icml.cc/Conferences/2024): verify `rebuttalDeadline` and `finalDecisionDate`
-- [IJCAI 2024](https://ijcai24.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [KDD 2024](https://kdd2024.kdd.org/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [NAACL 2025](https://2025.naacl.org): verify `rebuttalDeadline` and `finalDecisionDate`
-- [NeurIPS 2024](https://nips.cc/Conferences/2024): verify `rebuttalDeadline` and `finalDecisionDate`
-- [SIGIR 2024](https://sigir-2024.github.io): verify `rebuttalDeadline` and `finalDecisionDate`
-- [WACV 2025](https://wacv2025.thecvf.com/): verify `rebuttalDeadline` and `finalDecisionDate`
-- [WWW 2023](https://www2023.thewebconf.org/): verify `rebuttalDeadline` and `finalDecisionDate`
+- Total CCF AI + DM/IR conferences: 75
+- Matched from ai-deadlines: 40
+- Backfilled from existing JSON: 17
+- Final conferences with deadlines: 40
+- Missing deadlines (omitted): 35
+
+## Conferences with deadlines
+
+- **AAAI** (2027) — AI — CCF-A — deadline: 2026-07-28T23:59:59-12:00
+- **AAMAS** (2025) — AI — CCF-B — deadline: 2024-10-16T23:59:59-12:00
+- **ECAI** (2024) — AI — CCF-B — deadline: 2024-04-25T23:59:59-12:00
+- **ICAPS** (2024) — AI — CCF-B — deadline: 2023-12-13T23:59:59-12:00
+- **IJCAI** (2026) — AI — CCF-B — deadline: 2026-01-19T23:59:59-12:00
+- **KR** (2024) — AI — CCF-B — deadline: 2024-05-01T23:59:59-12:00
+- **ACCV** (2020) — CV — CCF-C — deadline: 2020-07-08T23:59:00+00:00
+- **BMVC** (2026) — CV — CCF-C — deadline: 2026-05-29T23:59:59-12:00
+- **CVPR** (2026) — CV — CCF-A — deadline: 2025-11-13T23:59:59-12:00
+- **ECCV** (2026) — CV — CCF-B — deadline: 2026-03-05T23:00:00+01:00
+- **FG** (2021) — CV — CCF-C — deadline: 2021-04-15T23:59:00+00:00
+- **ICCV** (2027) — CV — CCF-A — deadline: 2027-03-05T23:59:59-12:00
+- **ICPR** (2020) — CV — CCF-C — deadline: 2020-07-15T23:59:00+01:00
+- **ECML-PKDD** (2024) — DM — CCF-B — deadline: 2024-07-22T23:59:59-12:00
+- **ICDM** (2023) — DM — CCF-B — deadline: 2023-07-01T23:59:00+00:00
+- **KDD** (2027) — DM — CCF-A — deadline: 2026-07-26T23:59:59-12:00
+- **PAKDD** (2023) — DM — CCF-C — deadline: 2022-12-07T23:59:59-08:00
+- **SDM** (2021) — DM — CCF-B — deadline: 2020-10-12T23:59:00-05:00
+- **CIKM** (2026) — IR — CCF-B — deadline: 2026-05-23T23:59:59-12:00
+- **ECIR** (2025) — IR — CCF-C — deadline: 2024-10-09T23:59:59-12:00
+- **ISWC** (2023) — IR — CCF-B — deadline: 2023-05-09T23:59:59-12:00
+- **RecSys** (2023) — IR — CCF-B — deadline: 2023-04-21T23:59:59-12:00
+- **SIGIR** (2026) — IR — CCF-A — deadline: 2026-01-22T23:59:59-12:00
+- **WSDM** (2025) — IR — CCF-B — deadline: 2024-08-14T23:59:00-12:00
+- **ACML** (2023) — ML — CCF-C — deadline: 2023-06-23T23:59:00-12:00
+- **AISTATS** (2025) — ML — CCF-C — deadline: 2024-10-10T23:59:59-12:00
+- **ALT** (2020) — ML — CCF-C — deadline: 2019-09-20T16:59:59+00:00
+- **COLT** (2020) — ML — CCF-B — deadline: 2020-01-31T16:00:00+00:00
+- **ICLR** (2026) — ML — CCF-A — deadline: 2025-09-24T23:59:59-12:00
+- **ICML** (2026) — ML — CCF-A — deadline: 2026-01-28T23:59:59-12:00
+- **NeurIPS** (2026) — ML — CCF-A — deadline: 2026-05-06T23:59:59-12:00
+- **UAI** (2024) — ML — CCF-B — deadline: 2024-02-09T23:59:59-12:00
+- **ACM MM** (2026) — MM — CCF-A — deadline: 2026-04-01T23:59:59-12:00
+- **ACL** (2026) — NLP — CCF-A — deadline: 2026-01-05T23:59:59-12:00
+- **COLING** (2027) — NLP — CCF-B — deadline: 2026-10-12T23:59:59-12:00
+- **CoNLL** (2023) — NLP — CCF-C — deadline: 2023-06-30T23:59:59-12:00
+- **EMNLP** (2026) — NLP — CCF-B — deadline: 2026-05-25T23:59:59-12:00
+- **NAACL** (2027) — NLP — CCF-B — deadline: 2026-10-12T23:59:59-12:00
+- **ICRA** (2025) — Robotics — CCF-B — deadline: 2024-09-15T23:59:59+00:00
+- **IROS** (2024) — Robotics — CCF-C — deadline: 2024-03-01T23:59:59+00:00
+
+## Conferences without known deadlines (omitted)
+
+- ADMA — DM — CCF-C
+- APWeb — DB — CCF-C
+- CIDR — DB — CCF-B
+- DAI — AI — CCF-C
+- DASFAA — DB — CCF-B
+- DEXA — DB — CCF-C
+- EDBT — DB — CCF-B
+- ER — DB — CCF-C
+- ESWC — IR — CCF-C
+- GECCO — ML — CCF-C
+- ICANN — ML — CCF-C
+- ICCBR — AI — CCF-B
+- ICDAR — CV — CCF-C
+- ICDE — DB — CCF-A
+- ICDT — DB — CCF-B
+- ICONIP — ML — CCF-C
+- ICTAI — AI — CCF-C
+- IEEE CEC — ML — CCF-C
+- IJCB — CV — CCF-C
+- IJCNN — ML — CCF-C
+- ILP — AI — CCF-C
+- KSEM — AI — CCF-C
+- MDM — DB — CCF-C
+- NLPCC — NLP — CCF-C
+- PODS — DB — CCF-B
+- PPSN — ML — CCF-B
+- PRICAI — AI — CCF-C
+- SIGMOD — DB — CCF-A
+- SSDBM — DB — CCF-C
+- SSTD — DB — CCF-C
+- VLDB — DB — CCF-A
+- WAIM — DB — CCF-C
+- WISA — IR — CCF-C
+- WISE — IR — CCF-B
+- WebDB — IR — CCF-C
