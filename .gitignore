@@ -12,3 +12,7 @@ CCF_DATA/
 
 # Build outputs
 build/
+
+# AI assistant context files
+CONTEXT.md
+AGENTS.md
