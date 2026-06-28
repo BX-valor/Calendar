@@ -65,6 +65,14 @@ struct MenuBarView: View {
 
                 Spacer()
 
+                Toggle("通知", isOn: Binding(
+                    get: { viewModel.notificationsEnabled },
+                    set: { viewModel.toggleNotifications(enabled: $0) }
+                ))
+                .toggleStyle(.switch)
+                .font(.system(size: 12))
+                .controlSize(.small)
+
                 Button("退出") {
                     NSApplication.shared.terminate(nil)
                 }

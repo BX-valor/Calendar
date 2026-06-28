@@ -6,7 +6,9 @@ final class ConferenceListViewModel: ObservableObject {
     @Published var conferences: [Conference] = []
     @Published var errorMessage: String?
     @Published var filter: ConferenceFilter = ConferenceFilter()
+    @Published var notificationsEnabled: Bool
 
+    private let preferences = NotificationPreferences.shared
     private var timer: AnyCancellable?
 
     /// 经过筛选并排序后的会议列表，视图应使用此属性渲染。
@@ -17,6 +19,7 @@ final class ConferenceListViewModel: ObservableObject {
     }
 
     init() {
+        notificationsEnabled = preferences.isEnabled
         load()
         // Refresh the "time until deadline" calculations every minute.
         timer = Timer.publish(every: 60, on: .main, in: .common)
@@ -30,6 +33,7 @@ final class ConferenceListViewModel: ObservableObject {
         do {
             conferences = try ConferenceDataService.shared.loadAllConferences()
             errorMessage = nil
+            rescheduleNotifications()
         } catch {
             conferences = []
             errorMessage = (error as? ConferenceDataError)?.description ?? error.localizedDescription
@@ -58,6 +62,7 @@ final class ConferenceListViewModel: ObservableObject {
         conferences.append(conference)
         sortConferences()
         save()
+        rescheduleNotifications()
     }
 
     func updateConference(_ conference: Conference) {
@@ -65,12 +70,47 @@ final class ConferenceListViewModel: ObservableObject {
             conferences[index] = conference
             sortConferences()
             save()
+            rescheduleNotifications()
         }
     }
 
     func deleteConference(_ conference: Conference) {
         conferences.removeAll { $0.id == conference.id }
         save()
+        rescheduleNotifications()
+    }
+
+    func toggleNotifications(enabled: Bool) {
+        preferences.isEnabled = enabled
+        notificationsEnabled = enabled
+
+        guard NotificationService.shared.isAvailable else {
+            errorMessage = "通知功能需在完整 .app bundle 中运行，请使用 Xcode Archive 或 ./scripts/build_dmg.sh 打包后测试"
+            if enabled {
+                preferences.isEnabled = false
+                notificationsEnabled = false
+            }
+            return
+        }
+
+        if enabled {
+            NotificationService.shared.requestAuthorization { [weak self] granted in
+                if granted {
+                    self?.rescheduleNotifications()
+                } else {
+                    self?.preferences.isEnabled = false
+                    self?.notificationsEnabled = false
+                    self?.errorMessage = "需要系统通知权限才能开启提醒"
+                }
+            }
+        } else {
+            NotificationService.shared.removeAllNotifications()
+        }
+    }
+
+    private func rescheduleNotifications() {
+        guard preferences.isEnabled else { return }
+        NotificationService.shared.scheduleNotifications(for: conferences)
     }
 
     func toggleTag(_ tag: String) {
