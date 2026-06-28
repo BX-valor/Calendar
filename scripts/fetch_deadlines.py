@@ -511,6 +511,10 @@ CCF_CONFERENCES: dict[str, dict] = {
     },
 }
 
+# Only keep conference entries whose year is >= MIN_YEAR. This avoids polluting
+# the app with stale deadlines for conferences that have already taken place.
+MIN_YEAR = 2025
+
 DATA_SOURCE = (
     "https://raw.githubusercontent.com/paperswithcode/ai-deadlines/gh-pages/"
     "_data/conferences.yml"
@@ -845,20 +849,29 @@ def main() -> int:
 
         existing_entry = existing_by_name.get(canonical)
 
+        chosen = None
         if fetched_entry and existing_entry:
             # Prefer the entry with the latest year (i.e. the most recent deadline).
             if fetched_entry["year"] >= existing_entry["year"]:
-                merged_by_name[canonical] = fetched_entry
+                chosen = fetched_entry
             else:
-                merged_by_name[canonical] = existing_entry
+                chosen = existing_entry
                 used_existing_count += 1
         elif fetched_entry:
-            merged_by_name[canonical] = fetched_entry
+            chosen = fetched_entry
         elif existing_entry:
-            merged_by_name[canonical] = existing_entry
+            chosen = existing_entry
             used_existing_count += 1
         else:
             missing.append(canonical)
+            continue
+
+        # Drop stale entries for conferences that already took place before MIN_YEAR.
+        if chosen["year"] < MIN_YEAR:
+            missing.append(canonical)
+            continue
+
+        merged_by_name[canonical] = chosen
 
     merged = sorted(
         merged_by_name.values(),
