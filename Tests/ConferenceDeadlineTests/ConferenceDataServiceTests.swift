@@ -2,6 +2,17 @@ import XCTest
 @testable import ConferenceDeadline
 
 final class ConferenceDataServiceTests: XCTestCase {
+    func testBundledConferencesDecodeThroughDeadlineLifecycle() throws {
+        let dataService = ConferenceDataService(userConferencesURL: { nil })
+
+        let conferences = try dataService.loadDefaultConferences()
+
+        XCTAssertFalse(conferences.isEmpty)
+        XCTAssertTrue(
+            conferences.allSatisfy { $0.deadlineLifecycle.entries.count >= 2 }
+        )
+    }
+
     func testLegacyUserConferenceArrayMigratesOnNextSave() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

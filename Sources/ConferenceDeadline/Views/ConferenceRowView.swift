@@ -4,16 +4,15 @@ struct ConferenceRowView: View {
     let conference: Conference
     @State private var isExpanded = false
 
-    private var urgencyColor: Color {
-        let interval = conference.timeUntilNextDeadline()
-        if interval < 0 {
-            return .gray
-        } else if interval <= 7 * 24 * 60 * 60 {
-            return .red
-        } else if interval <= 30 * 24 * 60 * 60 {
-            return .orange
-        } else {
-            return .primary
+    private func urgencyColor(
+        for summary: DeadlineSummary,
+        relativeTo now: Date
+    ) -> Color {
+        switch summary.urgency(relativeTo: now) {
+        case .past: .gray
+        case .withinSevenDays: .red
+        case .withinThirtyDays: .orange
+        case .later: .primary
         }
     }
 
@@ -26,9 +25,12 @@ struct ConferenceRowView: View {
         }
     }
 
-    private var nextDeadlineText: String {
-        let (event, date) = conference.nextDeadline()
-        let interval = date.timeIntervalSince(Date())
+    private func summaryText(
+        for summary: DeadlineSummary,
+        relativeTo now: Date
+    ) -> String {
+        let entry = summary.entry
+        let interval = entry.date.timeIntervalSince(now)
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.day, .hour]
         formatter.unitsStyle = .full
@@ -38,10 +40,13 @@ struct ConferenceRowView: View {
             ? (formatter.string(from: -interval).map { "\($0)前" } ?? "已过期")
             : (formatter.string(from: interval).map { "\($0)后" } ?? "即将")
 
-        return "\(event.rawValue) · \(timeString)"
+        return "\(entry.kind.displayName) · \(timeString)"
     }
 
     var body: some View {
+        let now = Date()
+        let summary = conference.deadlineLifecycle.summary(relativeTo: now)
+
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -61,9 +66,9 @@ struct ConferenceRowView: View {
                             }
                         }
                     }
-                    Text(nextDeadlineText)
+                    Text(summaryText(for: summary, relativeTo: now))
                         .font(.system(size: 11))
-                        .foregroundStyle(urgencyColor)
+                        .foregroundStyle(urgencyColor(for: summary, relativeTo: now))
                 }
 
                 Spacer()
@@ -75,16 +80,8 @@ struct ConferenceRowView: View {
 
             if isExpanded {
                 VStack(alignment: .leading, spacing: 4) {
-                    detailRow(label: "摘要截止", date: conference.abstractDeadline)
-                    detailRow(label: "投稿截止", date: conference.paperDeadline)
-                    if let rebuttal = conference.rebuttalDeadline {
-                        detailRow(label: "Rebuttal", date: rebuttal)
-                    }
-                    if let finalDecision = conference.finalDecisionDate {
-                        detailRow(label: "Final Decision", date: finalDecision)
-                    }
-                    if let confDate = conference.conferenceDate {
-                        detailRow(label: "会议召开", date: confDate)
+                    ForEach(conference.deadlineLifecycle.entries) { entry in
+                        detailRow(label: entry.kind.displayName, date: entry.date)
                     }
                     if let location = conference.location {
                         detailInfoRow(label: "Location", value: location)

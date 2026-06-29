@@ -45,7 +45,8 @@ struct ConferenceUserData: Codable, Equatable {
         }
 
         return merged.sorted {
-            $0.timeUntilNextDeadline(relativeTo: now) < $1.timeUntilNextDeadline(relativeTo: now)
+            $0.deadlineLifecycle.summary(relativeTo: now).entry.date
+                < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
         }
     }
 }

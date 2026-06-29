@@ -339,33 +339,9 @@ struct ConferenceInlineFormView: View {
             Divider()
                 .padding(.vertical, 4)
 
-            VStack(alignment: .leading, spacing: 2) {
-                DatePicker("摘要截止", selection: $conference.abstractDeadline)
-                    .datePickerStyle(.compact)
-                validationMessage(for: .abstractDeadline)
+            ForEach(DeadlineKind.allCases) { kind in
+                deadlineField(for: kind)
             }
-
-            VStack(alignment: .leading, spacing: 2) {
-                DatePicker("投稿截止", selection: $conference.paperDeadline)
-                    .datePickerStyle(.compact)
-                validationMessage(for: .paperDeadline)
-            }
-
-            optionalDateField(
-                title: "Rebuttal",
-                date: binding(for: \.rebuttalDeadline),
-                field: .rebuttalDeadline
-            )
-            optionalDateField(
-                title: "Final Decision",
-                date: binding(for: \.finalDecisionDate),
-                field: .finalDecisionDate
-            )
-            optionalDateField(
-                title: "会议召开",
-                date: binding(for: \.conferenceDate),
-                field: .conferenceDate
-            )
         }
     }
 
@@ -389,14 +365,19 @@ struct ConferenceInlineFormView: View {
         }
     }
 
-    private func optionalDateField(
-        title: String,
-        date: Binding<Date?>,
-        field: ConferenceEditingField
-    ) -> some View {
+    @ViewBuilder
+    private func deadlineField(for kind: DeadlineKind) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            OptionalInlineDatePicker(title: title, date: date)
-            validationMessage(for: field)
+            if kind.isRequired {
+                DatePicker(kind.displayName, selection: requiredDateBinding(for: kind))
+                    .datePickerStyle(.compact)
+            } else {
+                OptionalInlineDatePicker(
+                    title: kind.displayName,
+                    date: dateBinding(for: kind)
+                )
+            }
+            validationMessage(for: .deadline(kind))
         }
     }
 
@@ -416,10 +397,25 @@ struct ConferenceInlineFormView: View {
         )
     }
 
-    private func binding(for keyPath: WritableKeyPath<Conference, Date?>) -> Binding<Date?> {
+    private func dateBinding(for kind: DeadlineKind) -> Binding<Date?> {
         Binding(
-            get: { conference[keyPath: keyPath] },
-            set: { conference[keyPath: keyPath] = $0 }
+            get: { conference.deadlineLifecycle[kind] },
+            set: { date in
+                var lifecycle = conference.deadlineLifecycle
+                lifecycle[kind] = date
+                conference.deadlineLifecycle = lifecycle
+            }
+        )
+    }
+
+    private func requiredDateBinding(for kind: DeadlineKind) -> Binding<Date> {
+        Binding(
+            get: { conference.deadlineLifecycle[kind]! },
+            set: { date in
+                var lifecycle = conference.deadlineLifecycle
+                lifecycle[kind] = date
+                conference.deadlineLifecycle = lifecycle
+            }
         )
     }
 }

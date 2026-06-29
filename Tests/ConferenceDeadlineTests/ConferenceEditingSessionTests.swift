@@ -36,13 +36,17 @@ final class ConferenceEditingSessionTests: XCTestCase {
         var invalid = try XCTUnwrap(session.draft)
         invalid.name = "  "
         invalid.tags = ["推荐"]
-        invalid.abstractDeadline = invalid.paperDeadline.addingTimeInterval(60)
+        invalid.deadlineLifecycle[.abstract] = invalid.deadlineLifecycle[.paper]!
+            .addingTimeInterval(60)
         session.updateDraft(invalid)
 
         let result = await session.save()
 
         XCTAssertEqual(result, .validationFailed)
-        XCTAssertEqual(Set(session.validationErrors.keys), [.name, .tags, .paperDeadline])
+        XCTAssertEqual(
+            Set(session.validationErrors.keys),
+            [.name, .tags, .deadline(.paper)]
+        )
         XCTAssertEqual(session.conferences, [original])
         let reloaded = try ConferenceEditingSession(
             store: store,

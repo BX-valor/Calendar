@@ -13,11 +13,7 @@ enum ConferenceEditingField: Hashable {
     case name
     case year
     case tags
-    case abstractDeadline
-    case paperDeadline
-    case rebuttalDeadline
-    case finalDecisionDate
-    case conferenceDate
+    case deadline(DeadlineKind)
 }
 
 enum ConferenceEditingNavigationResult: Equatable {
@@ -327,21 +323,8 @@ final class ConferenceEditingSession: ObservableObject {
             errors[.tags] = "至少选择一个 CCF 评级标签"
         }
 
-        let timeline: [(ConferenceEditingField, Date?)] = [
-            (.abstractDeadline, conference.abstractDeadline),
-            (.paperDeadline, conference.paperDeadline),
-            (.rebuttalDeadline, conference.rebuttalDeadline),
-            (.finalDecisionDate, conference.finalDecisionDate),
-            (.conferenceDate, conference.conferenceDate)
-        ]
-        var previousDate: Date?
-        for (field, date) in timeline {
-            guard let date else { continue }
-            if let previousDate, date < previousDate {
-                errors[field] = "日期不能早于前一个 Deadline"
-            } else {
-                previousDate = date
-            }
+        for kind in conference.deadlineLifecycle.validationErrors.keys {
+            errors[.deadline(kind)] = "日期不能早于前一个 Deadline"
         }
 
         return errors

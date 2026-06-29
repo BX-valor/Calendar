@@ -87,34 +87,24 @@ enum NotificationRequestBuilder {
         for conference: Conference,
         relativeTo now: Date = Date()
     ) -> [UNNotificationRequest] {
-        let events: [(Conference.DeadlineEvent, Date?)] = [
-            (.abstractDeadline, conference.abstractDeadline),
-            (.paperDeadline, conference.paperDeadline),
-            (.rebuttalDeadline, conference.rebuttalDeadline),
-            (.finalDecisionDate, conference.finalDecisionDate),
-            (.conferenceDate, conference.conferenceDate)
-        ]
-
-        return events.compactMap { event, date -> UNNotificationRequest? in
-            guard let date else { return nil }
-            return request(for: conference, event: event, deadline: date, relativeTo: now)
+        conference.deadlineLifecycle.entries.compactMap { deadline in
+            request(for: conference, deadline: deadline, relativeTo: now)
         }
     }
 
     /// 为单个事件生成通知请求。如果触发时间已过，则返回 nil。
     static func request(
         for conference: Conference,
-        event: Conference.DeadlineEvent,
-        deadline: Date,
+        deadline: DeadlineEntry,
         relativeTo now: Date = Date()
     ) -> UNNotificationRequest? {
-        guard let triggerDate = triggerDate(for: deadline, relativeTo: now) else {
+        guard let triggerDate = triggerDate(for: deadline.date, relativeTo: now) else {
             return nil
         }
 
         let content = UNMutableNotificationContent()
         content.title = "AI 会议 Deadline 提醒"
-        content.body = "「\(conference.name) \(conference.year)」\(event.rawValue) 将在 1 天后到来"
+        content.body = "「\(conference.name) \(conference.year)」\(deadline.kind.displayName) 将在 1 天后到来"
         content.sound = .default
 
         let calendar = Calendar.current
@@ -124,7 +114,7 @@ enum NotificationRequestBuilder {
         )
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
 
-        let identifier = "\(conference.id)-\(event.rawValue)"
+        let identifier = "\(conference.id)-\(deadline.kind.id)"
         return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
     }
 

@@ -76,11 +76,11 @@ final class NotificationServiceTests: XCTestCase {
         XCTAssertEqual(requests.count, 5)
         let identifiers = Set(requests.map(\.identifier))
         XCTAssertEqual(identifiers, [
-            "cvpr2026-摘要截止",
-            "cvpr2026-投稿截止",
-            "cvpr2026-Rebuttal",
-            "cvpr2026-Final Decision",
-            "cvpr2026-会议召开"
+            "cvpr2026-abstract",
+            "cvpr2026-paper",
+            "cvpr2026-rebuttal",
+            "cvpr2026-final-decision",
+            "cvpr2026-conference"
         ])
     }
 
@@ -110,10 +110,10 @@ final class NotificationServiceTests: XCTestCase {
         let requests = NotificationRequestBuilder.requests(for: conference, relativeTo: now)
 
         XCTAssertEqual(requests.count, 1)
-        XCTAssertEqual(requests.first?.identifier, "cvpr2026-摘要截止")
+        XCTAssertEqual(requests.first?.identifier, "cvpr2026-abstract")
     }
 
-    func testNotificationContent() {
+    func testNotificationContent() throws {
         let base = Date(timeIntervalSince1970: 1_700_000_000)
         let conference = makeConference(
             name: "NeurIPS",
@@ -121,10 +121,12 @@ final class NotificationServiceTests: XCTestCase {
             paperDeadline: base.addingTimeInterval(14 * 24 * 60 * 60)
         )
 
+        let paperDeadline = try XCTUnwrap(
+            conference.deadlineLifecycle.entries.first { $0.kind == .paper }
+        )
         let request = NotificationRequestBuilder.request(
             for: conference,
-            event: .paperDeadline,
-            deadline: conference.paperDeadline,
+            deadline: paperDeadline,
             relativeTo: base
         )
 

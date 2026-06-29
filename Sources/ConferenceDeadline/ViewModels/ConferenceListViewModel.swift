@@ -14,9 +14,13 @@ final class ConferenceListViewModel: ObservableObject {
 
     /// 经过筛选并排序后的会议列表，视图应使用此属性渲染。
     var displayedConferences: [Conference] {
-        conferences
+        let now = Date()
+        return conferences
             .filter { filter.includes($0) }
-            .sorted { $0.timeUntilNextDeadline() < $1.timeUntilNextDeadline() }
+            .sorted {
+                $0.deadlineLifecycle.summary(relativeTo: now).entry.date
+                    < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
+            }
     }
 
     init() {
@@ -130,6 +134,10 @@ final class ConferenceListViewModel: ObservableObject {
     }
 
     private func sortConferences() {
-        conferences.sort { $0.timeUntilNextDeadline() < $1.timeUntilNextDeadline() }
+        let now = Date()
+        conferences.sort {
+            $0.deadlineLifecycle.summary(relativeTo: now).entry.date
+                < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
+        }
     }
 }
