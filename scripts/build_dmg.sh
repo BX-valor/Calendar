@@ -4,7 +4,7 @@ set -euo pipefail
 # ConferenceDeadline macOS .dmg packager
 # Usage: ./scripts/build_dmg.sh
 
-VERSION="1.2"
+VERSION="1.3"
 APP_NAME="ConferenceDeadline"
 BUNDLE_ID="com.bxvalor.conference-deadline"
 
