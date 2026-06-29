@@ -14,53 +14,66 @@ enum ConferenceDataError: Error, CustomStringConvertible {
     }
 }
 
-final class ConferenceDataService {
+final class ConferenceDataService: ConferenceEditingStore {
     static let shared = ConferenceDataService()
 
-    private let userConferencesFilename = "userConferences.json"
-    private let appSupportDirectoryName = "ConferenceDeadline"
+    private let defaultConferencesURL: () -> URL?
+    private let userConferencesURL: () -> URL?
 
-    private init() {}
+    init(
+        defaultConferencesURL: @escaping () -> URL? = {
+            Bundle.module.url(forResource: "conferences", withExtension: "json")
+        },
+        userConferencesURL: @escaping () -> URL? = ConferenceDataService.defaultUserConferencesURL
+    ) {
+        self.defaultConferencesURL = defaultConferencesURL
+        self.userConferencesURL = userConferencesURL
+    }
 
     /// Loads merged conferences: defaults overlaid by user-defined conferences.
     func loadAllConferences() throws -> [Conference] {
         let defaults = try loadDefaultConferences()
-        let users = loadUserConferences() // never throws; returns empty on failure
-
-        var merged = defaults
-        for user in users {
-            if let index = merged.firstIndex(where: { $0.id == user.id }) {
-                merged[index] = user
-            } else {
-                merged.append(user)
-            }
+        let userData: ConferenceUserData
+        do {
+            userData = try loadUserData()
+        } catch {
+            print("用户会议数据损坏，忽略用户数据：\(error)")
+            userData = .empty
         }
-        return merged.sorted { $0.timeUntilNextDeadline() < $1.timeUntilNextDeadline() }
+        return userData.activeConferences(applyingTo: defaults)
     }
 
     /// Loads built-in default conferences from the app bundle.
     func loadDefaultConferences() throws -> [Conference] {
-        guard let url = Bundle.module.url(forResource: "conferences", withExtension: "json") else {
+        guard let url = defaultConferencesURL() else {
             throw ConferenceDataError.resourceNotFound
         }
         return try decodeConferences(from: url)
     }
 
-    /// Loads user-defined conferences from Application Support.
-    /// Returns an empty array if the file is missing or corrupt.
-    func loadUserConferences() -> [Conference] {
-        guard let url = userConferencesURL() else { return [] }
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
+    /// Loads user overrides and hidden Default Conference identifiers.
+    /// Legacy files containing only a Conference array are migrated in memory.
+    func loadUserData() throws -> ConferenceUserData {
+        guard let url = userConferencesURL() else { return .empty }
+        guard FileManager.default.fileExists(atPath: url.path) else { return .empty }
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
         do {
-            return try decodeConferences(from: url)
+            return try decoder.decode(ConferenceUserData.self, from: data)
         } catch {
-            print("用户会议数据损坏，忽略用户数据：\(error)")
-            return []
+            do {
+                let conferences = try decoder.decode([Conference].self, from: data)
+                return ConferenceUserData(conferences: conferences, hiddenDefaultIDs: [])
+            } catch {
+                throw ConferenceDataError.decodeFailed(error)
+            }
         }
     }
 
-    /// Saves user-defined conferences to Application Support.
-    func saveUserConferences(_ conferences: [Conference]) throws {
+    /// Saves user overrides and hidden Default Conference identifiers.
+    func saveUserData(_ userData: ConferenceUserData) throws {
         guard let url = userConferencesURL() else {
             throw NSError(domain: "ConferenceDataService", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法获取用户数据目录"])
         }
@@ -71,7 +84,7 @@ final class ConferenceDataService {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(conferences)
+        let data = try encoder.encode(userData)
         try data.write(to: url, options: .atomic)
     }
 
@@ -82,12 +95,12 @@ final class ConferenceDataService {
         return try decoder.decode([Conference].self, from: data)
     }
 
-    private func userConferencesURL() -> URL? {
+    private static func defaultUserConferencesURL() -> URL? {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return nil
         }
         return appSupport
-            .appendingPathComponent(appSupportDirectoryName, isDirectory: true)
-            .appendingPathComponent(userConferencesFilename)
+            .appendingPathComponent("ConferenceDeadline", isDirectory: true)
+            .appendingPathComponent("userConferences.json")
     }
 }

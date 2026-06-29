@@ -7,6 +7,7 @@ final class ConferenceListViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var filter: ConferenceFilter = ConferenceFilter()
     @Published var notificationsEnabled: Bool
+    @Published private(set) var editingSession: ConferenceEditingSession?
 
     private let preferences = NotificationPreferences.shared
     private var timer: AnyCancellable?
@@ -40,44 +41,31 @@ final class ConferenceListViewModel: ObservableObject {
         }
     }
 
-    func save() {
+    func beginEditing() {
+        guard editingSession == nil else { return }
+
         do {
-            // Only persist conferences that differ from defaults or are newly added.
-            let defaults = (try? ConferenceDataService.shared.loadDefaultConferences()) ?? []
-            let defaultsByID = Dictionary(uniqueKeysWithValues: defaults.map { ($0.id, $0) })
-
-            let userConferences = conferences.filter { conference in
-                guard let defaultConf = defaultsByID[conference.id] else { return true }
-                return conference != defaultConf
-            }
-
-            try ConferenceDataService.shared.saveUserConferences(userConferences)
+            editingSession = try ConferenceEditingSession(
+                store: ConferenceDataService.shared,
+                notifications: LiveConferenceNotificationSynchronizer(),
+                onConferencesChanged: { [weak self] conferences in
+                    self?.conferences = conferences
+                    self?.errorMessage = nil
+                },
+                onCommitCompleted: { [weak self] result in
+                    if case .savedWithNotificationWarning(let message) = result {
+                        self?.errorMessage = "会议已保存，但通知更新失败：\(message)"
+                    }
+                }
+            )
             errorMessage = nil
         } catch {
-            errorMessage = "保存失败：\(error.localizedDescription)"
+            errorMessage = "无法开始编辑：\(error.localizedDescription)"
         }
     }
 
-    func addConference(_ conference: Conference) {
-        conferences.append(conference)
-        sortConferences()
-        save()
-        rescheduleNotifications()
-    }
-
-    func updateConference(_ conference: Conference) {
-        if let index = conferences.firstIndex(where: { $0.id == conference.id }) {
-            conferences[index] = conference
-            sortConferences()
-            save()
-            rescheduleNotifications()
-        }
-    }
-
-    func deleteConference(_ conference: Conference) {
-        conferences.removeAll { $0.id == conference.id }
-        save()
-        rescheduleNotifications()
+    func finishEditing() {
+        editingSession = nil
     }
 
     func toggleNotifications(enabled: Bool) {
@@ -110,7 +98,15 @@ final class ConferenceListViewModel: ObservableObject {
 
     private func rescheduleNotifications() {
         guard preferences.isEnabled else { return }
-        NotificationService.shared.scheduleNotifications(for: conferences)
+        let conferences = conferences
+        Task { [weak self] in
+            do {
+                try await LiveConferenceNotificationSynchronizer()
+                    .synchronize(conferences: conferences)
+            } catch {
+                self?.errorMessage = "通知更新失败：\(error.localizedDescription)"
+            }
+        }
     }
 
     func toggleTag(_ tag: String) {

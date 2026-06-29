@@ -2,13 +2,12 @@ import SwiftUI
 
 struct MenuBarView: View {
     @ObservedObject var viewModel: ConferenceListViewModel
-    @State private var isEditing = false
 
     var body: some View {
         Group {
-            if isEditing {
-                InlineEditView(viewModel: viewModel) {
-                    isEditing = false
+            if let editingSession = viewModel.editingSession {
+                InlineEditView(session: editingSession) {
+                    viewModel.finishEditing()
                 }
             } else {
                 conferenceListView
@@ -57,7 +56,7 @@ struct MenuBarView: View {
 
             HStack {
                 Button("编辑会议") {
-                    isEditing = true
+                    viewModel.beginEditing()
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 12))

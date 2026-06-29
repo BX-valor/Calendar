@@ -43,15 +43,14 @@ final class NotificationService {
         }
     }
 
-    /// 为所有会议的所有有效 deadline 预约提前 1 天的通知。
-    func scheduleNotifications(for conferences: [Conference]) {
+    /// Replaces all pending notifications and reports scheduling failures.
+    func synchronizeNotifications(for conferences: [Conference]) async throws {
         guard isAvailable else { return }
 
         removeAllNotifications()
-
         let requests = conferences.flatMap { NotificationRequestBuilder.requests(for: $0) }
         for request in requests {
-            center.add(request)
+            try await center.add(request)
         }
     }
 
@@ -59,6 +58,21 @@ final class NotificationService {
     func removeAllNotifications() {
         guard isAvailable else { return }
         center.removeAllPendingNotificationRequests()
+    }
+}
+
+@MainActor
+struct LiveConferenceNotificationSynchronizer: ConferenceNotificationSynchronizing {
+    private let preferences: NotificationPreferences
+
+    init(preferences: NotificationPreferences = .shared) {
+        self.preferences = preferences
+    }
+
+    func synchronize(conferences: [Conference]) async throws {
+        guard preferences.isEnabled else { return }
+        guard Bundle.main.bundleURL.pathExtension == "app" else { return }
+        try await NotificationService.shared.synchronizeNotifications(for: conferences)
     }
 }
 

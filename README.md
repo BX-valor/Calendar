@@ -11,7 +11,8 @@
 - 显示 CCF 评级 tag（CCF-A 红、CCF-B 橙、CCF-C 蓝）
 - 支持按 CCF 等级（A/B/C）和研究领域（AI / ML / CV / NLP / Robotics / DM / IR / DB / MM）筛选
 - 本地通知提醒（需在系统设置中授权）
-- 支持用户手动添加、编辑、删除会议
+- 支持用户手动添加、编辑、删除会议；编辑内容仅在显式保存后生效
+- 默认会议可持久隐藏，并支持单独或全部恢复
 - 用户数据保存在 `~/Library/Application Support/ConferenceDeadline/userConferences.json`
 
 ## 环境要求

@@ -1,156 +1,245 @@
 import SwiftUI
 
 struct InlineEditView: View {
-    @ObservedObject var viewModel: ConferenceListViewModel
+    @ObservedObject var session: ConferenceEditingSession
     let onDone: () -> Void
 
-    @State private var selectedID: String?
-    @State private var draft: Conference?
+    @State private var showingHiddenConferences = false
+    @State private var showingNavigationConfirmation = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Button("返回") {
-                    saveDraftIfNeeded()
-                    onDone()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 12))
-
-                Spacer()
-
-                if viewModel.conferences.count > 1 {
-                    Picker("", selection: $selectedID) {
-                        ForEach(viewModel.conferences) { conference in
-                            Text("\(conference.name) \(String(conference.year))")
-                                .tag(conference.id as String?)
-                        }
-                    }
-                    .labelsHidden()
-                    .frame(maxWidth: 180)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            header
 
             Divider()
 
-            if let draft {
-                ScrollView {
-                    ConferenceInlineFormView(conference: binding(for: draft))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                }
+            if showingHiddenConferences {
+                hiddenConferencesView
             } else {
-                Text("暂无会议可编辑")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 200)
+                editorView
             }
 
             Divider()
 
-            HStack {
-                Button("新增") {
-                    addConference()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 12))
-
-                Spacer()
-
-                if draft != nil {
-                    Button("删除") {
-                        deleteSelectedConference()
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.red)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            footer
         }
         .frame(width: 360)
         .frame(minHeight: 380, maxHeight: 520)
-        .onAppear {
-            if selectedID == nil, let first = viewModel.conferences.first {
-                selectedID = first.id
-                draft = first
+        .onChange(of: session.exitRequested) { _, exitRequested in
+            if exitRequested {
+                onDone()
             }
         }
-        .onChange(of: selectedID) { _, newID in
-            saveDraftIfNeeded()
-            if let newID, let conference = viewModel.conferences.first(where: { $0.id == newID }) {
-                draft = conference
+        .confirmationDialog(
+            "有未保存的修改",
+            isPresented: $showingNavigationConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("保存并继续") {
+                Task { await session.saveChangesAndContinue() }
+            }
+            Button("放弃修改") {
+                session.discardChangesAndContinue()
+            }
+            Button("继续编辑", role: .cancel) {
+                session.cancelPendingNavigation()
+            }
+        } message: {
+            Text("请选择如何处理当前 Conference Draft。")
+        }
+        .confirmationDialog(
+            "确认删除会议",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("删除", role: .destructive) {
+                Task { await session.deleteSelectedConference() }
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("Default Conference 将被隐藏；User Conference 将被永久删除。未保存的修改会丢失。")
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            Button(showingHiddenConferences ? "返回编辑" : "完成") {
+                if showingHiddenConferences {
+                    showingHiddenConferences = false
+                } else {
+                    handleNavigationResult(session.requestExit())
+                }
+            }
+            .buttonStyle(.plain)
+            .font(.system(size: 12))
+
+            if session.isDirty && !showingHiddenConferences {
+                Text("未保存")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.orange)
+            }
+
+            Spacer()
+
+            if !session.hiddenDefaultConferences.isEmpty {
+                Button("已隐藏 \(session.hiddenDefaultConferences.count)") {
+                    showingHiddenConferences.toggle()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            }
+
+            if !showingHiddenConferences, !session.conferences.isEmpty {
+                Picker("", selection: selectedConferenceBinding) {
+                    ForEach(session.conferences) { conference in
+                        Text("\(conference.name) \(String(conference.year))")
+                            .tag(conference.id as String?)
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 150)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var editorView: some View {
+        if let draft = session.draft {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let feedback = commitFeedback {
+                        Text(feedback.message)
+                            .font(.system(size: 11))
+                            .foregroundStyle(feedback.color)
+                    }
+
+                    ConferenceInlineFormView(
+                        conference: Binding(
+                            get: { session.draft ?? draft },
+                            set: { session.updateDraft($0) }
+                        ),
+                        validationErrors: session.validationErrors
+                    )
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+            }
+        } else {
+            Text("暂无会议可编辑")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, minHeight: 200)
+        }
+    }
+
+    private var hiddenConferencesView: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ForEach(session.hiddenDefaultConferences) { conference in
+                    HStack {
+                        Text("\(conference.name) \(String(conference.year))")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Button("恢复") {
+                            Task { await session.restoreDefaultConference(id: conference.id) }
+                        }
+                        .controlSize(.small)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding(12)
+        }
+    }
+
+    private var footer: some View {
+        HStack(spacing: 12) {
+            if showingHiddenConferences {
+                Button("全部恢复") {
+                    Task { await session.restoreAllDefaultConferences() }
+                }
+                .disabled(session.hiddenDefaultConferences.isEmpty || session.isCommitting)
+                Spacer()
             } else {
-                draft = nil
+                Button("新增") {
+                    handleNavigationResult(session.requestNewConference())
+                }
+
+                Spacer()
+
+                Button("取消修改") {
+                    session.discardChanges()
+                }
+                .disabled(!session.isDirty || session.isCommitting)
+
+                Button("保存") {
+                    Task { await session.save() }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!session.isDirty || session.isCommitting)
+
+                if session.draft != nil {
+                    Button("删除") {
+                        showingDeleteConfirmation = true
+                    }
+                    .foregroundStyle(.red)
+                    .disabled(session.isCommitting)
+                }
             }
         }
+        .buttonStyle(.plain)
+        .font(.system(size: 12))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
-    private func binding(for conference: Conference) -> Binding<Conference> {
+    private var selectedConferenceBinding: Binding<String?> {
         Binding(
-            get: { conference },
-            set: { newValue in
-                self.draft = newValue
-                viewModel.updateConference(newValue)
+            get: { session.selectedID },
+            set: { newID in
+                guard let newID else { return }
+                handleNavigationResult(session.requestSelection(id: newID))
             }
         )
     }
 
-    private func addConference() {
-        saveDraftIfNeeded()
-
-        let newConference = Conference(
-            id: UUID().uuidString,
-            name: "New Conference",
-            year: Calendar.current.component(.year, from: Date()) + 1,
-            category: nil,
-            abstractDeadline: Date().addingTimeInterval(30 * 24 * 60 * 60),
-            paperDeadline: Date().addingTimeInterval(37 * 24 * 60 * 60),
-            rebuttalDeadline: nil,
-            finalDecisionDate: nil,
-            conferenceDate: nil,
-            location: nil,
-            venue: nil,
-            website: nil,
-            timezone: nil,
-            tags: ["CCF-A"]
-        )
-        viewModel.addConference(newConference)
-        selectedID = newConference.id
-        draft = newConference
-    }
-
-    private func deleteSelectedConference() {
-        if let draft {
-            viewModel.deleteConference(draft)
-            self.draft = nil
-            selectedID = viewModel.conferences.first?.id
-            if let first = viewModel.conferences.first {
-                self.draft = first
-            }
+    private var commitFeedback: (message: String, color: Color)? {
+        switch session.lastCommitResult {
+        case .saved:
+            return ("已保存", .green)
+        case .savedWithNotificationWarning(let message):
+            return ("已保存，但通知更新失败：\(message)", .orange)
+        case .validationFailed:
+            return ("请修正标记的字段", .red)
+        case .persistenceFailed(let message):
+            return ("保存失败：\(message)", .red)
+        case .noDraft, .none:
+            return nil
         }
     }
 
-    private func saveDraftIfNeeded() {
-        if let draft, let original = viewModel.conferences.first(where: { $0.id == draft.id }), draft != original {
-            viewModel.updateConference(draft)
+    private func handleNavigationResult(_ result: ConferenceEditingNavigationResult) {
+        if result == .confirmationRequired {
+            showingNavigationConfirmation = true
         }
     }
 }
 
 struct ConferenceInlineFormView: View {
     @Binding var conference: Conference
+    let validationErrors: [ConferenceEditingField: String]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            formField("名称") {
+            formField("名称", error: validationErrors[.name]) {
                 TextField("", text: $conference.name)
             }
 
             HStack {
-                formField("年份") {
+                formField("年份", error: validationErrors[.year]) {
                     TextField("", value: $conference.year, formatter: NumberFormatter())
                 }
                 formField("领域") {
@@ -159,6 +248,7 @@ struct ConferenceInlineFormView: View {
             }
 
             TagEditorView(tags: $conference.tags)
+            validationMessage(for: .tags)
 
             formField("官网") {
                 TextField("", text: binding(for: \.website))
@@ -180,26 +270,73 @@ struct ConferenceInlineFormView: View {
             Divider()
                 .padding(.vertical, 4)
 
-            DatePicker("摘要截止", selection: $conference.abstractDeadline)
-                .datePickerStyle(.compact)
+            VStack(alignment: .leading, spacing: 2) {
+                DatePicker("摘要截止", selection: $conference.abstractDeadline)
+                    .datePickerStyle(.compact)
+                validationMessage(for: .abstractDeadline)
+            }
 
-            DatePicker("投稿截止", selection: $conference.paperDeadline)
-                .datePickerStyle(.compact)
+            VStack(alignment: .leading, spacing: 2) {
+                DatePicker("投稿截止", selection: $conference.paperDeadline)
+                    .datePickerStyle(.compact)
+                validationMessage(for: .paperDeadline)
+            }
 
-            OptionalInlineDatePicker(title: "Rebuttal", date: binding(for: \.rebuttalDeadline))
-            OptionalInlineDatePicker(title: "Final Decision", date: binding(for: \.finalDecisionDate))
-            OptionalInlineDatePicker(title: "会议召开", date: binding(for: \.conferenceDate))
+            optionalDateField(
+                title: "Rebuttal",
+                date: binding(for: \.rebuttalDeadline),
+                field: .rebuttalDeadline
+            )
+            optionalDateField(
+                title: "Final Decision",
+                date: binding(for: \.finalDecisionDate),
+                field: .finalDecisionDate
+            )
+            optionalDateField(
+                title: "会议召开",
+                date: binding(for: \.conferenceDate),
+                field: .conferenceDate
+            )
         }
     }
 
     @ViewBuilder
-    private func formField<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+    private func formField<Content: View>(
+        _ label: String,
+        error: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
             content()
                 .textFieldStyle(.roundedBorder)
+            if let error {
+                Text(error)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+
+    private func optionalDateField(
+        title: String,
+        date: Binding<Date?>,
+        field: ConferenceEditingField
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            OptionalInlineDatePicker(title: title, date: date)
+            validationMessage(for: field)
+        }
+    }
+
+    @ViewBuilder
+    private func validationMessage(for field: ConferenceEditingField) -> some View {
+        if let message = validationErrors[field] {
+            Text(message)
+                .font(.system(size: 9))
+                .foregroundStyle(.red)
         }
     }
 
