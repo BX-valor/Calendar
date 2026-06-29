@@ -195,6 +195,29 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(session.draft, target)
     }
 
+    func testCancellingPendingNavigationKeepsDraftAndSelection() throws {
+        let first = makeConference(id: "cvpr2026", name: "CVPR")
+        let second = makeConference(id: "icml2027", name: "ICML")
+        let store = InMemoryConferenceEditingStore(defaults: [first, second])
+        let session = try ConferenceEditingSession(
+            store: store,
+            notifications: NoopConferenceNotificationSynchronizer()
+        )
+        let originalID = try XCTUnwrap(session.selectedID)
+        let target = originalID == first.id ? second : first
+        var edited = try XCTUnwrap(session.draft)
+        edited.name += " Updated"
+        session.updateDraft(edited)
+        XCTAssertEqual(session.requestSelection(id: target.id), .confirmationRequired)
+
+        session.cancelPendingNavigation()
+
+        XCTAssertNil(session.pendingNavigation)
+        XCTAssertEqual(session.selectedID, originalID)
+        XCTAssertEqual(session.draft, edited)
+        XCTAssertTrue(session.isDirty)
+    }
+
     func testSavingDirtyDraftThenSwitchingCommitsAndContinues() async throws {
         let first = makeConference(id: "cvpr2026", name: "CVPR")
         let second = makeConference(id: "icml2027", name: "ICML")
@@ -214,6 +237,31 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(session.selectedID, target.id)
         let reloaded = try ConferenceEditingSession(store: store, notifications: notifications)
         XCTAssertEqual(reloaded.conferences.first { $0.id == edited.id }?.name, edited.name)
+    }
+
+    func testInvalidDraftCannotNavigateAfterSaveAndContinue() async throws {
+        let first = makeConference(id: "cvpr2026", name: "CVPR")
+        let second = makeConference(id: "icml2027", name: "ICML")
+        let store = InMemoryConferenceEditingStore(defaults: [first, second])
+        let session = try ConferenceEditingSession(
+            store: store,
+            notifications: NoopConferenceNotificationSynchronizer()
+        )
+        let originalID = try XCTUnwrap(session.selectedID)
+        let target = originalID == first.id ? second : first
+        var invalid = try XCTUnwrap(session.draft)
+        invalid.name = "  "
+        session.updateDraft(invalid)
+        XCTAssertEqual(session.requestSelection(id: target.id), .confirmationRequired)
+
+        let result = await session.saveChangesAndContinue()
+
+        XCTAssertEqual(result, .validationFailed)
+        XCTAssertNil(session.pendingNavigation)
+        XCTAssertEqual(session.selectedID, originalID)
+        XCTAssertEqual(session.draft, invalid)
+        XCTAssertEqual(session.validationErrors[.name], "会议名称不能为空")
+        XCTAssertTrue(session.isDirty)
     }
 
     func testPersistenceFailureKeepsSavedConferenceUnchanged() async throws {

@@ -5,7 +5,6 @@ struct InlineEditView: View {
     let onDone: () -> Void
 
     @State private var showingHiddenConferences = false
-    @State private var showingNavigationConfirmation = false
     @State private var showingDeleteConfirmation = false
 
     var body: some View {
@@ -32,25 +31,9 @@ struct InlineEditView: View {
                     onDone()
                 }
             }
-            .confirmationDialog(
-                "有未保存的修改",
-                isPresented: $showingNavigationConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("保存并继续") {
-                    Task { await session.saveChangesAndContinue() }
-                }
-                Button("放弃修改") {
-                    session.discardChangesAndContinue()
-                }
-                Button("继续编辑", role: .cancel) {
-                    session.cancelPendingNavigation()
-                }
-            } message: {
-                Text("请选择如何处理当前 Conference Draft。")
-            }
-
-            if showingDeleteConfirmation {
+            if let navigation = session.pendingNavigation {
+                navigationConfirmationOverlay(for: navigation)
+            } else if showingDeleteConfirmation {
                 deleteConfirmationOverlay
             }
         }
@@ -62,7 +45,7 @@ struct InlineEditView: View {
                 if showingHiddenConferences {
                     showingHiddenConferences = false
                 } else {
-                    handleNavigationResult(session.requestExit())
+                    _ = session.requestExit()
                 }
             }
             .buttonStyle(.plain)
@@ -159,7 +142,7 @@ struct InlineEditView: View {
                 Spacer()
             } else {
                 Button("新增") {
-                    handleNavigationResult(session.requestNewConference())
+                    _ = session.requestNewConference()
                 }
 
                 Spacer()
@@ -195,7 +178,7 @@ struct InlineEditView: View {
             get: { session.selectedID },
             set: { newID in
                 guard let newID else { return }
-                handleNavigationResult(session.requestSelection(id: newID))
+                _ = session.requestSelection(id: newID)
             }
         )
     }
@@ -215,54 +198,102 @@ struct InlineEditView: View {
         }
     }
 
-    private func handleNavigationResult(_ result: ConferenceEditingNavigationResult) {
-        if result == .confirmationRequired {
-            showingNavigationConfirmation = true
+    private var deleteConfirmationOverlay: some View {
+        InlineConfirmationOverlay(
+            title: "确认删除会议",
+            message: "Default Conference 将被隐藏；User Conference 将被永久删除。未保存的修改会丢失。",
+            isBusy: session.isCommitting,
+            onDismiss: {
+                showingDeleteConfirmation = false
+            }
+        ) {
+            Button("取消") {
+                showingDeleteConfirmation = false
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .frame(minWidth: 60)
+            .keyboardShortcut(.cancelAction)
+
+            Button("删除") {
+                showingDeleteConfirmation = false
+                Task { await session.deleteSelectedConference() }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            .controlSize(.small)
+            .frame(minWidth: 60)
         }
     }
 
-    private var deleteConfirmationOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.2)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    showingDeleteConfirmation = false
-                }
+    private func navigationConfirmationOverlay(
+        for navigation: ConferenceEditingNavigation
+    ) -> some View {
+        let content = navigationConfirmationContent(for: navigation)
 
-            VStack(spacing: 16) {
-                Text("确认删除会议")
-                    .font(.system(size: 13, weight: .semibold))
-
-                Text("Default Conference 将被隐藏；User Conference 将被永久删除。未保存的修改会丢失。")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 240)
-
-                HStack(spacing: 16) {
-                    Button("取消") {
-                        showingDeleteConfirmation = false
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .frame(minWidth: 60)
-
-                    Button("删除") {
-                        showingDeleteConfirmation = false
-                        Task { await session.deleteSelectedConference() }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                    .controlSize(.small)
-                    .frame(minWidth: 60)
-                }
+        return InlineConfirmationOverlay(
+            title: content.title,
+            message: content.message,
+            isBusy: session.isCommitting,
+            onDismiss: {
+                session.cancelPendingNavigation()
             }
-            .padding(20)
-            .frame(width: 280)
-            .background(Color(NSColor.windowBackgroundColor))
-            .cornerRadius(10)
-            .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 4)
+        ) {
+            Button("继续编辑") {
+                session.cancelPendingNavigation()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .keyboardShortcut(.cancelAction)
+
+            Button(content.discardTitle) {
+                session.discardChangesAndContinue()
+            }
+            .buttonStyle(.bordered)
+            .foregroundStyle(.red)
+            .controlSize(.small)
+
+            Button(content.saveTitle) {
+                Task { await session.saveChangesAndContinue() }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
         }
+    }
+
+    private func navigationConfirmationContent(
+        for navigation: ConferenceEditingNavigation
+    ) -> NavigationConfirmationContent {
+        switch navigation {
+        case .selectConference:
+            return NavigationConfirmationContent(
+                title: "切换会议前保存修改？",
+                message: "当前 Conference Draft 有未保存的修改。",
+                saveTitle: "保存并切换",
+                discardTitle: "放弃并切换"
+            )
+        case .newConference:
+            return NavigationConfirmationContent(
+                title: "新建会议前保存修改？",
+                message: "当前 Conference Draft 有未保存的修改。",
+                saveTitle: "保存并新建",
+                discardTitle: "放弃并新建"
+            )
+        case .exit:
+            return NavigationConfirmationContent(
+                title: "完成编辑前保存修改？",
+                message: "当前 Conference Draft 有未保存的修改。",
+                saveTitle: "保存并完成",
+                discardTitle: "放弃并完成"
+            )
+        }
+    }
+
+    private struct NavigationConfirmationContent {
+        let title: String
+        let message: String
+        let saveTitle: String
+        let discardTitle: String
     }
 }
 
