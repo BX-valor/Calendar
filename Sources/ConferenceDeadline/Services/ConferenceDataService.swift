@@ -14,46 +14,72 @@ enum ConferenceDataError: Error, CustomStringConvertible {
     }
 }
 
-final class ConferenceDataService: ConferenceEditingStore {
+final class ConferenceDataService: ConferenceCatalogPersisting {
     static let shared = ConferenceDataService()
 
     private let defaultConferencesURL: () -> URL?
     private let userConferencesURL: () -> URL?
+    private let recoveryTimestamp: () -> String
 
     init(
         defaultConferencesURL: @escaping () -> URL? = {
             Bundle.module.url(forResource: "conferences", withExtension: "json")
         },
-        userConferencesURL: @escaping () -> URL? = ConferenceDataService.defaultUserConferencesURL
+        userConferencesURL: @escaping () -> URL? = ConferenceDataService.defaultUserConferencesURL,
+        recoveryTimestamp: @escaping () -> String = ConferenceDataService.defaultRecoveryTimestamp
     ) {
         self.defaultConferencesURL = defaultConferencesURL
         self.userConferencesURL = userConferencesURL
+        self.recoveryTimestamp = recoveryTimestamp
     }
 
-    /// Loads merged conferences: defaults overlaid by user-defined conferences.
-    func loadAllConferences() throws -> [Conference] {
+    func load() throws -> ConferenceCatalogPersistenceState {
         let defaults = try loadDefaultConferences()
-        let userData: ConferenceUserData
         do {
-            userData = try loadUserData()
+            return ConferenceCatalogPersistenceState(
+                defaults: defaults,
+                userData: try loadUserData(),
+                recovery: nil,
+                isWriteEnabled: true
+            )
         } catch {
-            print("用户会议数据损坏，忽略用户数据：\(error)")
-            userData = .empty
+            guard let userDataURL = userConferencesURL(),
+                  FileManager.default.fileExists(atPath: userDataURL.path) else {
+                throw error
+            }
+
+            let backupURL = recoveryBackupURL(for: userDataURL)
+            do {
+                try FileManager.default.moveItem(at: userDataURL, to: backupURL)
+                return ConferenceCatalogPersistenceState(
+                    defaults: defaults,
+                    userData: .empty,
+                    recovery: .recovered(backupFileName: backupURL.lastPathComponent),
+                    isWriteEnabled: true
+                )
+            } catch {
+                return ConferenceCatalogPersistenceState(
+                    defaults: defaults,
+                    userData: .empty,
+                    recovery: .writeBlocked("用户数据损坏，且无法创建备份：\(error.localizedDescription)"),
+                    isWriteEnabled: false
+                )
+            }
         }
-        return userData.activeConferences(applyingTo: defaults)
     }
 
-    /// Loads built-in default conferences from the app bundle.
-    func loadDefaultConferences() throws -> [Conference] {
+    func save(_ userData: ConferenceUserData) throws {
+        try saveUserData(userData)
+    }
+
+    private func loadDefaultConferences() throws -> [Conference] {
         guard let url = defaultConferencesURL() else {
             throw ConferenceDataError.resourceNotFound
         }
         return try decodeConferences(from: url)
     }
 
-    /// Loads user overrides and hidden Default Conference identifiers.
-    /// Legacy files containing only a Conference array are migrated in memory.
-    func loadUserData() throws -> ConferenceUserData {
+    private func loadUserData() throws -> ConferenceUserData {
         guard let url = userConferencesURL() else { return .empty }
         guard FileManager.default.fileExists(atPath: url.path) else { return .empty }
         let data = try Data(contentsOf: url)
@@ -72,8 +98,7 @@ final class ConferenceDataService: ConferenceEditingStore {
         }
     }
 
-    /// Saves user overrides and hidden Default Conference identifiers.
-    func saveUserData(_ userData: ConferenceUserData) throws {
+    private func saveUserData(_ userData: ConferenceUserData) throws {
         guard let url = userConferencesURL() else {
             throw NSError(domain: "ConferenceDataService", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法获取用户数据目录"])
         }
@@ -102,5 +127,19 @@ final class ConferenceDataService: ConferenceEditingStore {
         return appSupport
             .appendingPathComponent("ConferenceDeadline", isDirectory: true)
             .appendingPathComponent("userConferences.json")
+    }
+
+    private func recoveryBackupURL(for userDataURL: URL) -> URL {
+        let baseName = userDataURL.deletingPathExtension().lastPathComponent
+        let fileExtension = userDataURL.pathExtension
+        let backupName = "\(baseName).corrupt-\(recoveryTimestamp()).\(fileExtension)"
+        return userDataURL.deletingLastPathComponent().appendingPathComponent(backupName)
+    }
+
+    private static func defaultRecoveryTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter.string(from: Date())
     }
 }

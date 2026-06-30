@@ -1,6 +1,11 @@
 import Combine
 import Foundation
 
+@MainActor
+protocol ConferenceNotificationSynchronizing {
+    func synchronize(conferences: [Conference]) async throws
+}
+
 enum ConferenceEditingCommitResult: Equatable {
     case saved
     case savedWithNotificationWarning(String)
@@ -29,7 +34,6 @@ enum ConferenceEditingNavigation: Equatable {
 
 @MainActor
 final class ConferenceEditingSession: ObservableObject {
-    @Published private(set) var conferences: [Conference]
     @Published private(set) var selectedID: String?
     @Published private(set) var draft: Conference?
     @Published private(set) var validationErrors: [ConferenceEditingField: String] = [:]
@@ -38,50 +42,50 @@ final class ConferenceEditingSession: ObservableObject {
     @Published private(set) var lastCommitResult: ConferenceEditingCommitResult?
     @Published private(set) var isCommitting = false
 
+    var conferences: [Conference] {
+        catalog.snapshot.conferences
+    }
+
+    var hiddenDefaultConferences: [Conference] {
+        catalog.snapshot.hiddenDefaultConferences
+    }
+
     var isDirty: Bool {
         draft != savedDraft
     }
 
-    var hiddenDefaultConferences: [Conference] {
-        defaults
-            .filter { userData.hiddenDefaultIDs.contains($0.id) }
-            .map { defaultConference in
-                userData.conferences.first { $0.id == defaultConference.id } ?? defaultConference
-            }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
-    private let store: ConferenceEditingStore
+    private let catalog: ConferenceCatalog
     private let notifications: ConferenceNotificationSynchronizing
-    private let onConferencesChanged: ([Conference]) -> Void
     private let onCommitCompleted: (ConferenceEditingCommitResult) -> Void
     private let makeID: () -> String
     private let now: () -> Date
-    private let defaults: [Conference]
-    private var userData: ConferenceUserData
     private var savedDraft: Conference?
     private var selectionBeforeNew: String?
+    private var catalogCancellable: AnyCancellable?
 
     init(
-        store: ConferenceEditingStore,
+        catalog: ConferenceCatalog,
         notifications: ConferenceNotificationSynchronizing,
         makeID: @escaping () -> String = { UUID().uuidString },
         now: @escaping () -> Date = Date.init,
-        onConferencesChanged: @escaping ([Conference]) -> Void = { _ in },
         onCommitCompleted: @escaping (ConferenceEditingCommitResult) -> Void = { _ in }
-    ) throws {
-        self.store = store
+    ) {
+        self.catalog = catalog
         self.notifications = notifications
         self.makeID = makeID
         self.now = now
-        self.onConferencesChanged = onConferencesChanged
         self.onCommitCompleted = onCommitCompleted
-        defaults = try store.loadDefaultConferences()
-        userData = try store.loadUserData()
-        conferences = Self.merge(defaults: defaults, userData: userData)
-        selectedID = conferences.first?.id
-        draft = conferences.first
-        savedDraft = conferences.first
+
+        let initial = catalog.snapshot.conferences.first
+        selectedID = initial?.id
+        draft = initial
+        savedDraft = initial
+
+        catalogCancellable = catalog.$snapshot
+            .dropFirst()
+            .sink { [weak self] snapshot in
+                self?.catalogDidChange(snapshot)
+            }
     }
 
     func updateDraft(_ conference: Conference) {
@@ -89,7 +93,9 @@ final class ConferenceEditingSession: ObservableObject {
         draft = conference
         lastCommitResult = nil
         if !validationErrors.isEmpty {
-            validationErrors = Self.validate(conference)
+            validationErrors = validationMessages(
+                for: catalog.validationIssues(for: conference)
+            )
         }
     }
 
@@ -128,6 +134,49 @@ final class ConferenceEditingSession: ObservableObject {
         return result
     }
 
+    func discardChanges() {
+        validationErrors = [:]
+        lastCommitResult = nil
+        if let savedDraft {
+            draft = savedDraft
+            return
+        }
+
+        let fallbackID = selectionBeforeNew ?? conferences.first?.id
+        selectionBeforeNew = nil
+        selectConference(id: fallbackID)
+    }
+
+    func deleteSelectedConference() async -> ConferenceEditingCommitResult {
+        guard let selectedID else {
+            return recordCommit(.noDraft)
+        }
+        return await commit(preferredSelectedID: nil) {
+            catalog.delete(id: selectedID)
+        }
+    }
+
+    func restoreDefaultConference(id: String) async -> ConferenceEditingCommitResult {
+        await commit(preferredSelectedID: selectedID ?? id) {
+            catalog.restoreDefault(id: id)
+        }
+    }
+
+    func restoreAllDefaultConferences() async -> ConferenceEditingCommitResult {
+        await commit(preferredSelectedID: selectedID) {
+            catalog.restoreAllDefaults()
+        }
+    }
+
+    func save() async -> ConferenceEditingCommitResult {
+        guard let draft else {
+            return recordCommit(.noDraft)
+        }
+        return await commit(preferredSelectedID: draft.id) {
+            catalog.save(draft)
+        }
+    }
+
     private func beginNewConference() {
         selectionBeforeNew = selectedID
         let currentDate = now()
@@ -152,88 +201,6 @@ final class ConferenceEditingSession: ObservableObject {
         draft = conference
         validationErrors = [:]
         lastCommitResult = nil
-    }
-
-    func discardChanges() {
-        validationErrors = [:]
-        lastCommitResult = nil
-        if let savedDraft {
-            draft = savedDraft
-            return
-        }
-
-        let fallbackID = selectionBeforeNew ?? conferences.first?.id
-        selectionBeforeNew = nil
-        selectConference(id: fallbackID)
-    }
-
-    func deleteSelectedConference() async -> ConferenceEditingCommitResult {
-        guard let selectedID else {
-            lastCommitResult = .noDraft
-            return .noDraft
-        }
-
-        var updatedUserData = userData
-        if defaults.contains(where: { $0.id == selectedID }) {
-            updatedUserData.hiddenDefaultIDs.insert(selectedID)
-        } else {
-            updatedUserData.conferences.removeAll { $0.id == selectedID }
-        }
-
-        return await commit(updatedUserData, preferredSelectedID: nil)
-    }
-
-    func restoreDefaultConference(id: String) async -> ConferenceEditingCommitResult {
-        guard userData.hiddenDefaultIDs.contains(id) else {
-            lastCommitResult = .noDraft
-            return .noDraft
-        }
-
-        var updatedUserData = userData
-        updatedUserData.hiddenDefaultIDs.remove(id)
-        return await commit(updatedUserData, preferredSelectedID: selectedID ?? id)
-    }
-
-    func restoreAllDefaultConferences() async -> ConferenceEditingCommitResult {
-        guard !userData.hiddenDefaultIDs.isEmpty else {
-            lastCommitResult = .noDraft
-            return .noDraft
-        }
-
-        var updatedUserData = userData
-        updatedUserData.hiddenDefaultIDs.removeAll()
-        return await commit(updatedUserData, preferredSelectedID: selectedID)
-    }
-
-    func save() async -> ConferenceEditingCommitResult {
-        guard let draft else {
-            lastCommitResult = .noDraft
-            return .noDraft
-        }
-
-        validationErrors = Self.validate(draft)
-        guard validationErrors.isEmpty else {
-            lastCommitResult = .validationFailed
-            return .validationFailed
-        }
-
-        var updatedUserData = userData
-        if let defaultConference = defaults.first(where: { $0.id == draft.id }), defaultConference == draft {
-            updatedUserData.conferences.removeAll { $0.id == draft.id }
-        } else if let index = updatedUserData.conferences.firstIndex(where: { $0.id == draft.id }) {
-            updatedUserData.conferences[index] = draft
-        } else {
-            updatedUserData.conferences.append(draft)
-        }
-
-        return await commit(updatedUserData, preferredSelectedID: draft.id)
-    }
-
-    private static func merge(
-        defaults: [Conference],
-        userData: ConferenceUserData
-    ) -> [Conference] {
-        userData.activeConferences(applyingTo: defaults)
     }
 
     private func selectConference(id: String?) {
@@ -268,23 +235,26 @@ final class ConferenceEditingSession: ObservableObject {
     }
 
     private func commit(
-        _ updatedUserData: ConferenceUserData,
-        preferredSelectedID: String?
+        preferredSelectedID: String?,
+        mutation: () -> ConferenceCatalogMutationResult
     ) async -> ConferenceEditingCommitResult {
         guard !isCommitting else { return .noDraft }
         isCommitting = true
         defer { isCommitting = false }
 
-        do {
-            try store.saveUserData(updatedUserData)
-        } catch {
-            let result = ConferenceEditingCommitResult.persistenceFailed(error.localizedDescription)
-            return recordCommit(result)
+        let mutationResult = mutation()
+        switch mutationResult {
+        case .validationFailed(let issues):
+            validationErrors = validationMessages(for: issues)
+            return recordCommit(.validationFailed)
+        case .persistenceFailed(let message), .writeBlockedByRecovery(let message):
+            return recordCommit(.persistenceFailed(message))
+        case .notFound, .noChange:
+            return recordCommit(.noDraft)
+        case .committed:
+            break
         }
 
-        userData = updatedUserData
-        conferences = Self.merge(defaults: defaults, userData: userData)
-        onConferencesChanged(conferences)
         let nextID = preferredSelectedID.flatMap { preferredID in
             conferences.contains(where: { $0.id == preferredID }) ? preferredID : nil
         } ?? conferences.first?.id
@@ -295,11 +265,40 @@ final class ConferenceEditingSession: ObservableObject {
             try await notifications.synchronize(conferences: conferences)
             return recordCommit(.saved)
         } catch {
-            let result = ConferenceEditingCommitResult.savedWithNotificationWarning(
-                error.localizedDescription
+            return recordCommit(
+                .savedWithNotificationWarning(error.localizedDescription)
             )
-            return recordCommit(result)
         }
+    }
+
+    private func catalogDidChange(_ snapshot: ConferenceCatalogSnapshot) {
+        objectWillChange.send()
+        guard !isDirty else { return }
+
+        let next = snapshot.conferences.first { $0.id == selectedID }
+            ?? snapshot.conferences.first
+        selectedID = next?.id
+        savedDraft = next
+        draft = next
+    }
+
+    private func validationMessages(
+        for issues: Set<ConferenceValidationIssue>
+    ) -> [ConferenceEditingField: String] {
+        var messages: [ConferenceEditingField: String] = [:]
+        for issue in issues {
+            switch issue {
+            case .name:
+                messages[.name] = "会议名称不能为空"
+            case .year:
+                messages[.year] = "年份必须大于 0"
+            case .tags:
+                messages[.tags] = "至少选择一个 CCF 评级标签"
+            case .deadline(let kind):
+                messages[.deadline(kind)] = "日期不能早于前一个 Deadline"
+            }
+        }
+        return messages
     }
 
     private func recordCommit(
@@ -308,26 +307,6 @@ final class ConferenceEditingSession: ObservableObject {
         lastCommitResult = result
         onCommitCompleted(result)
         return result
-    }
-
-    private static func validate(_ conference: Conference) -> [ConferenceEditingField: String] {
-        var errors: [ConferenceEditingField: String] = [:]
-
-        if conference.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errors[.name] = "会议名称不能为空"
-        }
-        if conference.year <= 0 {
-            errors[.year] = "年份必须大于 0"
-        }
-        if !conference.tags.contains(where: { ["CCF-A", "CCF-B", "CCF-C"].contains($0) }) {
-            errors[.tags] = "至少选择一个 CCF 评级标签"
-        }
-
-        for kind in conference.deadlineLifecycle.validationErrors.keys {
-            errors[.deadline(kind)] = "日期不能早于前一个 Deadline"
-        }
-
-        return errors
     }
 }
 

@@ -3,32 +3,51 @@ import XCTest
 
 @MainActor
 final class ConferenceEditingSessionTests: XCTestCase {
+    func testSessionReadsFromSharedCatalogSnapshot() throws {
+        let original = makeConference(id: "cvpr2026", name: "CVPR")
+        let store = InMemoryConferenceEditingStore(defaults: [original])
+        let catalog = try ConferenceCatalog(
+            persistence: store,
+            refreshInterval: nil
+        )
+        let session = ConferenceEditingSession(
+            catalog: catalog,
+            notifications: NoopConferenceNotificationSynchronizer()
+        )
+        var edited = original
+        edited.name = "CVPR Updated"
+
+        XCTAssertEqual(catalog.save(edited), .committed)
+
+        XCTAssertEqual(session.conferences, [edited])
+    }
+
     func testDraftChangesAreCommittedOnlyAfterSave() async throws {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(store: store, notifications: notifications)
+        let session = try makeSession(store: store, notifications: notifications)
 
         var edited = try XCTUnwrap(session.draft)
         edited.name = "CVPR Updated"
         session.updateDraft(edited)
 
         XCTAssertEqual(session.conferences.map(\.name), ["CVPR"])
-        let beforeSave = try ConferenceEditingSession(store: store, notifications: notifications)
+        let beforeSave = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(beforeSave.conferences.map(\.name), ["CVPR"])
 
         let result = await session.save()
 
         XCTAssertEqual(result, .saved)
         XCTAssertEqual(session.conferences.map(\.name), ["CVPR Updated"])
-        let afterSave = try ConferenceEditingSession(store: store, notifications: notifications)
+        let afterSave = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(afterSave.conferences.map(\.name), ["CVPR Updated"])
     }
 
     func testInvalidDraftCannotBeSaved() async throws {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -48,7 +67,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
             [.name, .tags, .deadline(.paper)]
         )
         XCTAssertEqual(session.conferences, [original])
-        let reloaded = try ConferenceEditingSession(
+        let reloaded = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -58,7 +77,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
     func testCancellingNewConferenceLeavesNoRecord() throws {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -76,7 +95,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertFalse(session.isDirty)
         XCTAssertEqual(session.selectedID, original.id)
         XCTAssertEqual(session.draft, original)
-        let reloaded = try ConferenceEditingSession(
+        let reloaded = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -87,7 +106,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: notifications,
             makeID: { "custom2027" }
@@ -101,7 +120,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
 
         XCTAssertEqual(result, .saved)
         XCTAssertFalse(session.isDirty)
-        let reloaded = try ConferenceEditingSession(store: store, notifications: notifications)
+        let reloaded = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(Set(reloaded.conferences.map(\.id)), [original.id, "custom2027"])
     }
 
@@ -109,14 +128,14 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(store: store, notifications: notifications)
+        let session = try makeSession(store: store, notifications: notifications)
 
         let deleteResult = await session.deleteSelectedConference()
 
         XCTAssertEqual(deleteResult, .saved)
         XCTAssertTrue(session.conferences.isEmpty)
         XCTAssertEqual(session.hiddenDefaultConferences, [original])
-        let hiddenReload = try ConferenceEditingSession(store: store, notifications: notifications)
+        let hiddenReload = try makeSession(store: store, notifications: notifications)
         XCTAssertTrue(hiddenReload.conferences.isEmpty)
         XCTAssertEqual(hiddenReload.hiddenDefaultConferences, [original])
 
@@ -125,7 +144,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(restoreResult, .saved)
         XCTAssertEqual(hiddenReload.conferences, [original])
         XCTAssertTrue(hiddenReload.hiddenDefaultConferences.isEmpty)
-        let restoredReload = try ConferenceEditingSession(store: store, notifications: notifications)
+        let restoredReload = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(restoredReload.conferences, [original])
     }
 
@@ -140,14 +159,14 @@ final class ConferenceEditingSessionTests: XCTestCase {
             )
         )
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(store: store, notifications: notifications)
+        let session = try makeSession(store: store, notifications: notifications)
 
         let result = await session.restoreAllDefaultConferences()
 
         XCTAssertEqual(result, .saved)
         XCTAssertEqual(Set(session.conferences.map(\.id)), [first.id, second.id])
         XCTAssertTrue(session.hiddenDefaultConferences.isEmpty)
-        let reloaded = try ConferenceEditingSession(store: store, notifications: notifications)
+        let reloaded = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(Set(reloaded.conferences.map(\.id)), [first.id, second.id])
     }
 
@@ -161,14 +180,14 @@ final class ConferenceEditingSessionTests: XCTestCase {
             )
         )
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(store: store, notifications: notifications)
+        let session = try makeSession(store: store, notifications: notifications)
 
         let result = await session.deleteSelectedConference()
 
         XCTAssertEqual(result, .saved)
         XCTAssertTrue(session.conferences.isEmpty)
         XCTAssertTrue(session.hiddenDefaultConferences.isEmpty)
-        let reloaded = try ConferenceEditingSession(store: store, notifications: notifications)
+        let reloaded = try makeSession(store: store, notifications: notifications)
         XCTAssertTrue(reloaded.conferences.isEmpty)
     }
 
@@ -176,7 +195,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let first = makeConference(id: "cvpr2026", name: "CVPR")
         let second = makeConference(id: "icml2027", name: "ICML")
         let store = InMemoryConferenceEditingStore(defaults: [first, second])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -203,7 +222,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let first = makeConference(id: "cvpr2026", name: "CVPR")
         let second = makeConference(id: "icml2027", name: "ICML")
         let store = InMemoryConferenceEditingStore(defaults: [first, second])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -227,7 +246,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let second = makeConference(id: "icml2027", name: "ICML")
         let store = InMemoryConferenceEditingStore(defaults: [first, second])
         let notifications = NoopConferenceNotificationSynchronizer()
-        let session = try ConferenceEditingSession(store: store, notifications: notifications)
+        let session = try makeSession(store: store, notifications: notifications)
         let originalID = try XCTUnwrap(session.selectedID)
         let target = originalID == first.id ? second : first
         var edited = try XCTUnwrap(session.draft)
@@ -239,7 +258,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
 
         XCTAssertEqual(result, .saved)
         XCTAssertEqual(session.selectedID, target.id)
-        let reloaded = try ConferenceEditingSession(store: store, notifications: notifications)
+        let reloaded = try makeSession(store: store, notifications: notifications)
         XCTAssertEqual(reloaded.conferences.first { $0.id == edited.id }?.name, edited.name)
     }
 
@@ -247,7 +266,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let first = makeConference(id: "cvpr2026", name: "CVPR")
         let second = makeConference(id: "icml2027", name: "ICML")
         let store = InMemoryConferenceEditingStore(defaults: [first, second])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -276,7 +295,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "磁盘空间不足"]
         )
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -289,7 +308,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(result, .persistenceFailed("磁盘空间不足"))
         XCTAssertTrue(session.isDirty)
         XCTAssertEqual(session.conferences, [original])
-        let reloaded = try ConferenceEditingSession(
+        let reloaded = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -299,7 +318,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
     func testNotificationFailureDoesNotRollBackSavedConference() async throws {
         let original = makeConference(id: "cvpr2026", name: "CVPR")
         let store = InMemoryConferenceEditingStore(defaults: [original])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: FailingConferenceNotificationSynchronizer()
         )
@@ -312,7 +331,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(result, .savedWithNotificationWarning("通知不可用"))
         XCTAssertFalse(session.isDirty)
         XCTAssertEqual(session.conferences.map(\.name), ["CVPR Updated"])
-        let reloaded = try ConferenceEditingSession(
+        let reloaded = try makeSession(
             store: store,
             notifications: NoopConferenceNotificationSynchronizer()
         )
@@ -323,7 +342,7 @@ final class ConferenceEditingSessionTests: XCTestCase {
         let first = makeConference(id: "cvpr2026", name: "CVPR")
         let second = makeConference(id: "icml2027", name: "ICML")
         let store = InMemoryConferenceEditingStore(defaults: [first, second])
-        let session = try ConferenceEditingSession(
+        let session = try makeSession(
             store: store,
             notifications: FailingConferenceNotificationSynchronizer()
         )
@@ -340,6 +359,48 @@ final class ConferenceEditingSessionTests: XCTestCase {
         XCTAssertEqual(result, warning)
         XCTAssertEqual(session.selectedID, target.id)
         XCTAssertEqual(session.lastCommitResult, warning)
+    }
+
+    func testConcurrentMutationIsRejectedBeforeCatalogWrite() async throws {
+        let original = makeConference(id: "cvpr2026", name: "CVPR")
+        let store = InMemoryConferenceEditingStore(defaults: [original])
+        let notifications = BlockingConferenceNotificationSynchronizer()
+        let session = try makeSession(store: store, notifications: notifications)
+        var edited = try XCTUnwrap(session.draft)
+        edited.name = "CVPR Updated"
+        session.updateDraft(edited)
+
+        let saveTask = Task { await session.save() }
+        while !notifications.hasStarted {
+            await Task.yield()
+        }
+
+        let concurrentResult = await session.deleteSelectedConference()
+
+        XCTAssertEqual(concurrentResult, .noDraft)
+        XCTAssertEqual(store.saveCount, 1)
+        XCTAssertEqual(session.conferences, [edited])
+        notifications.resume()
+        let saveResult = await saveTask.value
+        XCTAssertEqual(saveResult, .saved)
+    }
+
+    private func makeSession(
+        store: InMemoryConferenceEditingStore,
+        notifications: ConferenceNotificationSynchronizing,
+        makeID: @escaping () -> String = { UUID().uuidString },
+        now: @escaping () -> Date = Date.init
+    ) throws -> ConferenceEditingSession {
+        let catalog = try ConferenceCatalog(
+            persistence: store,
+            refreshInterval: nil
+        )
+        return ConferenceEditingSession(
+            catalog: catalog,
+            notifications: notifications,
+            makeID: makeID,
+            now: now
+        )
     }
 
     private func makeConference(id: String, name: String) -> Conference {
@@ -363,25 +424,28 @@ final class ConferenceEditingSessionTests: XCTestCase {
     }
 }
 
-private final class InMemoryConferenceEditingStore: ConferenceEditingStore {
+private final class InMemoryConferenceEditingStore: ConferenceCatalogPersisting {
     let defaults: [Conference]
     var userData: ConferenceUserData
     var saveError: Error?
+    private(set) var saveCount = 0
 
     init(defaults: [Conference], userData: ConferenceUserData = .empty) {
         self.defaults = defaults
         self.userData = userData
     }
 
-    func loadDefaultConferences() throws -> [Conference] {
-        defaults
+    func load() throws -> ConferenceCatalogPersistenceState {
+        ConferenceCatalogPersistenceState(
+            defaults: defaults,
+            userData: userData,
+            recovery: nil,
+            isWriteEnabled: true
+        )
     }
 
-    func loadUserData() throws -> ConferenceUserData {
-        userData
-    }
-
-    func saveUserData(_ userData: ConferenceUserData) throws {
+    func save(_ userData: ConferenceUserData) throws {
+        saveCount += 1
         if let saveError {
             throw saveError
         }
@@ -402,5 +466,23 @@ private struct FailingConferenceNotificationSynchronizer: ConferenceNotification
             code: 2,
             userInfo: [NSLocalizedDescriptionKey: "通知不可用"]
         )
+    }
+}
+
+@MainActor
+private final class BlockingConferenceNotificationSynchronizer: ConferenceNotificationSynchronizing {
+    private(set) var hasStarted = false
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    func synchronize(conferences: [Conference]) async throws {
+        hasStarted = true
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation
+        }
+    }
+
+    func resume() {
+        continuation?.resume()
+        continuation = nil
     }
 }

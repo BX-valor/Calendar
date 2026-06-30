@@ -26,6 +26,11 @@ struct MenuBarView: View {
 
             Divider()
 
+            if let recovery = viewModel.catalogRecovery {
+                recoveryNotice(recovery)
+                Divider()
+            }
+
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(.system(size: 12))
@@ -60,7 +65,8 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 12))
-                .foregroundStyle(.primary)
+                .foregroundStyle(viewModel.canEdit ? .primary : .secondary)
+                .disabled(!viewModel.canEdit)
 
                 Spacer()
 
@@ -92,6 +98,31 @@ struct MenuBarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    private func recoveryNotice(_ recovery: ConferenceCatalogRecovery) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: recovery.isBlocking ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(recovery.isBlocking ? .red : .orange)
+
+            Text(recovery.message)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 4)
+
+            if !recovery.isBlocking {
+                Button("关闭") {
+                    viewModel.dismissCatalogRecovery()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background((recovery.isBlocking ? Color.red : Color.orange).opacity(0.08))
     }
 
     private var filterSection: some View {
@@ -173,5 +204,21 @@ struct MenuBarView: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private extension ConferenceCatalogRecovery {
+    var isBlocking: Bool {
+        if case .writeBlocked = self { return true }
+        return false
+    }
+
+    var message: String {
+        switch self {
+        case .recovered(let backupFileName):
+            return "用户会议数据已损坏，原文件已备份为 \(backupFileName)。当前使用默认会议，可继续编辑。"
+        case .writeBlocked(let reason):
+            return "\(reason) 当前仅显示默认会议，编辑已停用以避免覆盖原文件。"
+        }
     }
 }

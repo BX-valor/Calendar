@@ -29,35 +29,4 @@ struct ConferenceUserData: Codable, Equatable {
         try container.encode(hiddenDefaultIDs.sorted(), forKey: .hiddenDefaultIDs)
     }
 
-    func activeConferences(
-        applyingTo defaults: [Conference],
-        relativeTo now: Date = Date()
-    ) -> [Conference] {
-        var merged = defaults.filter { !hiddenDefaultIDs.contains($0.id) }
-
-        for conference in conferences {
-            guard !hiddenDefaultIDs.contains(conference.id) else { continue }
-            if let index = merged.firstIndex(where: { $0.id == conference.id }) {
-                merged[index] = conference
-            } else {
-                merged.append(conference)
-            }
-        }
-
-        return merged.sorted {
-            $0.deadlineLifecycle.summary(relativeTo: now).entry.date
-                < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
-        }
-    }
-}
-
-protocol ConferenceEditingStore: AnyObject {
-    func loadDefaultConferences() throws -> [Conference]
-    func loadUserData() throws -> ConferenceUserData
-    func saveUserData(_ userData: ConferenceUserData) throws
-}
-
-@MainActor
-protocol ConferenceNotificationSynchronizing {
-    func synchronize(conferences: [Conference]) async throws
 }

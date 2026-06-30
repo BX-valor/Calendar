@@ -1,75 +1,79 @@
-import Foundation
 import Combine
+import Foundation
 
 @MainActor
 final class ConferenceListViewModel: ObservableObject {
-    @Published var conferences: [Conference] = []
+    @Published private(set) var snapshot: ConferenceCatalogSnapshot?
     @Published var errorMessage: String?
-    @Published var filter: ConferenceFilter = ConferenceFilter()
+    @Published var filter = ConferenceFilter()
     @Published var notificationsEnabled: Bool
     @Published private(set) var editingSession: ConferenceEditingSession?
 
-    private let preferences = NotificationPreferences.shared
-    private var timer: AnyCancellable?
-
-    /// 经过筛选并排序后的会议列表，视图应使用此属性渲染。
-    var displayedConferences: [Conference] {
-        let now = Date()
-        return conferences
-            .filter { filter.includes($0) }
-            .sorted {
-                $0.deadlineLifecycle.summary(relativeTo: now).entry.date
-                    < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
-            }
+    var conferences: [Conference] {
+        snapshot?.conferences ?? []
     }
+
+    var displayedConferences: [Conference] {
+        conferences.filter { filter.includes($0) }
+    }
+
+    var catalogRecovery: ConferenceCatalogRecovery? {
+        snapshot?.recovery
+    }
+
+    var canEdit: Bool {
+        snapshot?.isWriteEnabled == true
+    }
+
+    private let preferences = NotificationPreferences.shared
+    private var catalog: ConferenceCatalog?
+    private var catalogCancellable: AnyCancellable?
 
     init() {
         notificationsEnabled = preferences.isEnabled
-        load()
-        // Refresh the "time until deadline" calculations every minute.
-        timer = Timer.publish(every: 60, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.sortConferences()
-            }
-    }
 
-    func load() {
         do {
-            conferences = try ConferenceDataService.shared.loadAllConferences()
-            errorMessage = nil
+            let catalog = try ConferenceCatalog(
+                persistence: ConferenceDataService.shared
+            )
+            self.catalog = catalog
+            snapshot = catalog.snapshot
+            catalogCancellable = catalog.$snapshot
+                .dropFirst()
+                .sink { [weak self] snapshot in
+                    self?.snapshot = snapshot
+                }
             rescheduleNotifications()
         } catch {
-            conferences = []
-            errorMessage = (error as? ConferenceDataError)?.description ?? error.localizedDescription
+            catalog = nil
+            snapshot = nil
+            errorMessage = (error as? ConferenceDataError)?.description
+                ?? error.localizedDescription
         }
     }
 
     func beginEditing() {
-        guard editingSession == nil else { return }
+        guard editingSession == nil, let catalog else { return }
+        guard catalog.snapshot.isWriteEnabled else { return }
 
-        do {
-            editingSession = try ConferenceEditingSession(
-                store: ConferenceDataService.shared,
-                notifications: LiveConferenceNotificationSynchronizer(),
-                onConferencesChanged: { [weak self] conferences in
-                    self?.conferences = conferences
-                    self?.errorMessage = nil
-                },
-                onCommitCompleted: { [weak self] result in
-                    if case .savedWithNotificationWarning(let message) = result {
-                        self?.errorMessage = "会议已保存，但通知更新失败：\(message)"
-                    }
+        editingSession = ConferenceEditingSession(
+            catalog: catalog,
+            notifications: LiveConferenceNotificationSynchronizer(),
+            onCommitCompleted: { [weak self] result in
+                if case .savedWithNotificationWarning(let message) = result {
+                    self?.errorMessage = "会议已保存，但通知更新失败：\(message)"
                 }
-            )
-            errorMessage = nil
-        } catch {
-            errorMessage = "无法开始编辑：\(error.localizedDescription)"
-        }
+            }
+        )
+        errorMessage = nil
     }
 
     func finishEditing() {
         editingSession = nil
+    }
+
+    func dismissCatalogRecovery() {
+        catalog?.dismissRecoveryNotice()
     }
 
     func toggleNotifications(enabled: Bool) {
@@ -100,19 +104,6 @@ final class ConferenceListViewModel: ObservableObject {
         }
     }
 
-    private func rescheduleNotifications() {
-        guard preferences.isEnabled else { return }
-        let conferences = conferences
-        Task { [weak self] in
-            do {
-                try await LiveConferenceNotificationSynchronizer()
-                    .synchronize(conferences: conferences)
-            } catch {
-                self?.errorMessage = "通知更新失败：\(error.localizedDescription)"
-            }
-        }
-    }
-
     func toggleTag(_ tag: String) {
         if filter.selectedTags.contains(tag) {
             filter.selectedTags.remove(tag)
@@ -133,11 +124,16 @@ final class ConferenceListViewModel: ObservableObject {
         filter = ConferenceFilter()
     }
 
-    private func sortConferences() {
-        let now = Date()
-        conferences.sort {
-            $0.deadlineLifecycle.summary(relativeTo: now).entry.date
-                < $1.deadlineLifecycle.summary(relativeTo: now).entry.date
+    private func rescheduleNotifications() {
+        guard preferences.isEnabled else { return }
+        let conferences = conferences
+        Task { [weak self] in
+            do {
+                try await LiveConferenceNotificationSynchronizer()
+                    .synchronize(conferences: conferences)
+            } catch {
+                self?.errorMessage = "通知更新失败：\(error.localizedDescription)"
+            }
         }
     }
 }
