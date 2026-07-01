@@ -187,8 +187,6 @@ struct InlineEditView: View {
         switch session.lastCommitResult {
         case .saved:
             return ("已保存", .green)
-        case .savedWithNotificationWarning(let message):
-            return ("已保存，但通知更新失败：\(message)", .orange)
         case .validationFailed:
             return ("请修正标记的字段", .red)
         case .persistenceFailed(let message):

@@ -1,7 +1,7 @@
 import Foundation
 
 /// 管理通知相关的用户偏好设置。
-final class NotificationPreferences {
+final class NotificationPreferences: NotificationPreferencePersisting {
     static let shared = NotificationPreferences()
 
     private let key = "notificationsEnabled"

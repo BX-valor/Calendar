@@ -1,14 +1,8 @@
 import Combine
 import Foundation
 
-@MainActor
-protocol ConferenceNotificationSynchronizing {
-    func synchronize(conferences: [Conference]) async throws
-}
-
 enum ConferenceEditingCommitResult: Equatable {
     case saved
-    case savedWithNotificationWarning(String)
     case validationFailed
     case persistenceFailed(String)
     case noDraft
@@ -55,8 +49,6 @@ final class ConferenceEditingSession: ObservableObject {
     }
 
     private let catalog: ConferenceCatalog
-    private let notifications: ConferenceNotificationSynchronizing
-    private let onCommitCompleted: (ConferenceEditingCommitResult) -> Void
     private let makeID: () -> String
     private let now: () -> Date
     private var savedDraft: Conference?
@@ -65,16 +57,12 @@ final class ConferenceEditingSession: ObservableObject {
 
     init(
         catalog: ConferenceCatalog,
-        notifications: ConferenceNotificationSynchronizing,
         makeID: @escaping () -> String = { UUID().uuidString },
-        now: @escaping () -> Date = Date.init,
-        onCommitCompleted: @escaping (ConferenceEditingCommitResult) -> Void = { _ in }
+        now: @escaping () -> Date = Date.init
     ) {
         self.catalog = catalog
-        self.notifications = notifications
         self.makeID = makeID
         self.now = now
-        self.onCommitCompleted = onCommitCompleted
 
         let initial = catalog.snapshot.conferences.first
         selectedID = initial?.id
@@ -260,15 +248,7 @@ final class ConferenceEditingSession: ObservableObject {
         } ?? conferences.first?.id
         selectionBeforeNew = nil
         selectConference(id: nextID)
-
-        do {
-            try await notifications.synchronize(conferences: conferences)
-            return recordCommit(.saved)
-        } catch {
-            return recordCommit(
-                .savedWithNotificationWarning(error.localizedDescription)
-            )
-        }
+        return recordCommit(.saved)
     }
 
     private func catalogDidChange(_ snapshot: ConferenceCatalogSnapshot) {
@@ -305,7 +285,6 @@ final class ConferenceEditingSession: ObservableObject {
         _ result: ConferenceEditingCommitResult
     ) -> ConferenceEditingCommitResult {
         lastCommitResult = result
-        onCommitCompleted(result)
         return result
     }
 }
@@ -313,7 +292,7 @@ final class ConferenceEditingSession: ObservableObject {
 private extension ConferenceEditingCommitResult {
     var isSuccessful: Bool {
         switch self {
-        case .saved, .savedWithNotificationWarning:
+        case .saved:
             return true
         case .validationFailed, .persistenceFailed, .noDraft:
             return false

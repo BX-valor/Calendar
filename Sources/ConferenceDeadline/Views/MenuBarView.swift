@@ -4,7 +4,9 @@ struct MenuBarView: View {
     @ObservedObject var viewModel: ConferenceListViewModel
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
+            notificationStatus
+
             if let editingSession = viewModel.editingSession {
                 InlineEditView(session: editingSession) {
                     viewModel.finishEditing()
@@ -77,6 +79,7 @@ struct MenuBarView: View {
                 .toggleStyle(.switch)
                 .font(.system(size: 12))
                 .controlSize(.small)
+                .disabled(!viewModel.canToggleNotifications)
 
                 Button("退出") {
                     NSApplication.shared.terminate(nil)
@@ -98,6 +101,87 @@ struct MenuBarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var notificationStatus: some View {
+        switch viewModel.notificationState {
+        case .permissionDenied:
+            notificationStatusRow(
+                icon: "bell.slash.fill",
+                color: .orange,
+                message: "需要系统通知权限",
+                actionTitle: "打开系统设置",
+                action: viewModel.openNotificationSettings
+            )
+        case .syncFailed(let message):
+            notificationStatusRow(
+                icon: "exclamationmark.triangle.fill",
+                color: .orange,
+                message: "通知同步失败：\(message)",
+                actionTitle: "重试",
+                action: viewModel.retryNotificationSynchronization
+            )
+        case .unavailable:
+            notificationStatusRow(
+                icon: "info.circle.fill",
+                color: .secondary,
+                message: "当前环境不支持通知，请使用打包后的 App 测试"
+            )
+        case .requestingPermission:
+            notificationStatusRow(
+                color: .secondary,
+                message: "正在请求通知权限…",
+                showsProgress: true
+            )
+        case .syncing:
+            notificationStatusRow(
+                color: .secondary,
+                message: "正在更新通知…",
+                showsProgress: true
+            )
+        case .disabled, .enabled:
+            EmptyView()
+        }
+    }
+
+    private func notificationStatusRow(
+        icon: String? = nil,
+        color: Color,
+        message: String,
+        actionTitle: String? = nil,
+        action: (() -> Void)? = nil,
+        showsProgress: Bool = false
+    ) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 8) {
+                if showsProgress {
+                    ProgressView()
+                        .controlSize(.small)
+                } else if let icon {
+                    Image(systemName: icon)
+                        .foregroundStyle(color)
+                }
+
+                Text(message)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 4)
+
+                if let actionTitle, let action {
+                    Button(actionTitle, action: action)
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(color.opacity(0.08))
+
+            Divider()
+        }
     }
 
     private func recoveryNotice(_ recovery: ConferenceCatalogRecovery) -> some View {
